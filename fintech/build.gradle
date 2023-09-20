@@ -24,11 +24,12 @@ test {
 
 tasks.register("fatJar",Jar) {
     from sourceSets.main.output
-
     dependsOn configurations.runtimeClasspath
+
     manifest {
         attributes 'Main-Class': 'foo.Main'
     }
+    destinationDirectory.set(file('/'))
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
