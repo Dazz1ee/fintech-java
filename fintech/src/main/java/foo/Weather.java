@@ -1,17 +1,17 @@
 package foo;
 
-import lombok.Data;
+import lombok.Value;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
+@Value
 public class Weather {
-    private final UUID regionId;
+    UUID regionId;
 
-    private final String regionName;
+    String regionName;
 
-    private final Double temperature;
+    Double temperature;
 
-    private final LocalDateTime date;
+    LocalDateTime date;
 
 }

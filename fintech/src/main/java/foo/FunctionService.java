@@ -2,10 +2,9 @@ package foo;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class FunctionService {
     /** Задание 1 */
@@ -20,16 +19,18 @@ public abstract class FunctionService {
 
     /** Задание 2 */
     public static List<String> getRegionsWhereTemperatureGreat(List<Weather> weathers, double temperature) {
-        return weathers.parallelStream()
-                .filter(weather -> weather.getTemperature() > temperature)
-                .filter(distinctByKey(Weather::getRegionId))
+        return distinct(
+                weathers.parallelStream()
+                .filter(weather -> weather.getTemperature() > temperature),
+                Weather::getRegionId
+                )
                 .map(Weather::getRegionName)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    private static Predicate<Weather> distinctByKey(Function<Weather, UUID> keyExtractor) {
-        Set<UUID> set = ConcurrentHashMap.newKeySet();
-        return t -> set.add(keyExtractor.apply(t));
+    private static <O, H> Stream<O> distinct(Stream<O> input, Function<O, H> byKeyExtractor) {
+        Set<H> set = new HashSet<>();
+        return input.filter(o -> set.add(byKeyExtractor.apply(o)));
     }
 
     /** Задание 3 */
@@ -41,23 +42,28 @@ public abstract class FunctionService {
                                 Collectors.mapping(Weather::getTemperature, Collectors.toList())));
     }
 
-    /** Задание 4 */
-    public static Map<Integer, Collection<Weather>> getMapByKeyEqualsTemperature(List<Weather> weathers) {
+    /**
+     * Задание 4
+     */
+    public static Map<Integer, List<Weather>> getMapByKeyEqualsTemperature(List<Weather> weathers) {
         return weathers.parallelStream()
-                .collect(Collectors.groupingBy(weather -> weather.getTemperature().intValue(), Collectors.toCollection(ArrayList::new)));
+                .collect(Collectors.groupingBy(weather -> weather.getTemperature().intValue(), Collectors.toList()));
     }
     public static void fillList(List<Weather> weathers) {
         double upperBound = 41;
         double lowerBound = -41;
         Random random = new Random();
-
-        for (int i = 0; i < 1000; i++) {
+        Stream.generate(() -> {
             double temperature = random.nextDouble(upperBound - lowerBound) + lowerBound;
-            weathers.add(new Weather(Region.BELGOROD.getId(), Region.BELGOROD.getName(), temperature, LocalDateTime.now()));
-            weathers.add(new Weather(Region.MOSCOW.getId(), Region.MOSCOW.getName(), temperature, LocalDateTime.now()));
-            weathers.add(new Weather(Region.TAMBOV.getId(), Region.TAMBOV.getName(), random.nextDouble(upperBound - lowerBound) + lowerBound, LocalDateTime.now()));
-            weathers.add(new Weather(Region.TULA.getId(), Region.TULA.getName(), random.nextDouble(upperBound - lowerBound) + lowerBound, LocalDateTime.now()));
-            weathers.add(new Weather(Region.VLADIMIR.getId(), Region.VLADIMIR.getName(), random.nextDouble(upperBound - lowerBound) + lowerBound, LocalDateTime.now()));
-        }
+            return List.of(
+                    new Weather(Region.BELGOROD.getId(), Region.BELGOROD.getName(), temperature, LocalDateTime.now()),
+                    new Weather(Region.MOSCOW.getId(), Region.MOSCOW.getName(), temperature, LocalDateTime.now()),
+                    new Weather(Region.TAMBOV.getId(), Region.TAMBOV.getName(), random.nextDouble(upperBound - lowerBound) + lowerBound, LocalDateTime.now()),
+                    new Weather(Region.TULA.getId(), Region.TULA.getName(), random.nextDouble(upperBound - lowerBound) + lowerBound, LocalDateTime.now()),
+                    new Weather(Region.VLADIMIR.getId(), Region.VLADIMIR.getName(), random.nextDouble(upperBound - lowerBound) + lowerBound, LocalDateTime.now())
+            );
+        })
+        .limit(1000)
+        .forEach(weathers::addAll);
     }
 }

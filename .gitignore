@@ -4,3 +4,5 @@
 !/fintech/
 /fintech/build/
 .idea/
+/fintech/.gradle/
+/fintech/fintech.iml
