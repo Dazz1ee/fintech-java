@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+}
+apply plugin: 'java'
+group = 'foo'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.assertj:assertj-core:3.24.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.register("fatJar",Jar) {
+    from sourceSets.main.output
+    dependsOn configurations.runtimeClasspath
+
+    manifest {
+        attributes 'Main-Class': 'foo.Main'
+    }
+    destinationDirectory.set(file('/'))
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
