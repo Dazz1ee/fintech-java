@@ -14,11 +14,4 @@ public class Weather {
     private Double temperature;
 
     private LocalDateTime date;
-
-
-//    public void setRegionId(Long regionId) {
-//        if (this.regionId == null) {
-//            this.regionId = regionId;
-//        }
-//    }
 }
