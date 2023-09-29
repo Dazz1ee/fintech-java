@@ -19,7 +19,7 @@ public class WeatherService {
                 .findFirst();
     }
 
-    public Long addNewRegionWithWeather(WeatherRequest weatherWithNewRegion, String regionName) {
+    public Long addNewRegionWithWeather(String regionName, WeatherRequest weatherWithNewRegion) {
         Weather weather = new Weather(nextId.getAndAdd(1L), regionName, weatherWithNewRegion.temperature(), weatherWithNewRegion.dateTime());
         weathers.add(weather);
         return weather.getRegionId();

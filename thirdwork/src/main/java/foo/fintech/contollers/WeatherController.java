@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 
@@ -32,7 +33,7 @@ public class WeatherController {
 
     @Operation(
             summary = "get temperature by region ID",
-            description = "сan get temperature by region ID and date and time. If dateTime was null, dateTime is equal to the current time. DateTime format: 'yyyy-MM-ddTHH:mm'"
+            description = "сan get temperature by region ID and date and time. If dateTime was null, dateTime is equal to the current time. DateTime format: 'HH:mm dd/MM/yyyy'"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = Integer.class), mediaType = "application/json")}),
@@ -41,10 +42,10 @@ public class WeatherController {
     @GetMapping("/{city:[\\d]+}")
     public ResponseEntity<?> getTemperatureByRegionId(@PathVariable("city") Long regionId,
                                                       @RequestParam(required = false)
-                                                      @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-                                                      @Parameter(description = "DateTime format: 'yyyy-MM-ddTHH:mm'") LocalDateTime date) {
+                                                      @DateTimeFormat(pattern = "HH:mm dd/MM/yyyy")
+                                                      @Parameter(description = "DateTime format: 'HH:mm dd/MM/yyyy'") LocalDateTime date) {
         if (date == null) {
-            date = LocalDateTime.now();
+            date = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         }
 
         log.debug("date = {}", date);
@@ -59,7 +60,7 @@ public class WeatherController {
 
     @Operation(
             summary = "get temperature by region name",
-            description = "сan get temperature by region name. DateTime format: 'yyyy-MM-ddTHH:mm'"
+            description = "сan get temperature by region name. DateTime format: 'HH:mm dd/MM/yyyy'"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = Integer.class), mediaType = "application/json")}),
@@ -68,11 +69,11 @@ public class WeatherController {
     @GetMapping("/{city:[^\\d]+}")
     public ResponseEntity<?> getTemperature(@PathVariable("city") String name,
                                             @RequestParam(required = false)
-                                            @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-                                            @Parameter(description = "DateTime format: 'yyyy-MM-ddTHH:mm'") LocalDateTime date) {
+                                            @DateTimeFormat(pattern = "HH:mm dd/MM/yyyy")
+                                            @Parameter(description = "DateTime format: 'HH:mm dd/MM/yyyy'") LocalDateTime date) {
 
         if (date == null) {
-            date = LocalDateTime.now();
+            date = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         }
 
         Optional<Weather> result = weatherService.findWeatherByRegion(name, date, Weather::getRegionName);
@@ -85,7 +86,7 @@ public class WeatherController {
 
     @Operation(
             summary = "Add weather with new region",
-            description = "In this case, the addition is always successful. DateTime format: 'yyyy-MM-ddTHH:mm'"
+            description = "In this case, the addition is always successful. DateTime format: 'HH:mm dd/MM/yyyy'"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", content = {@Content(schema = @Schema())}),
@@ -94,14 +95,14 @@ public class WeatherController {
     @PostMapping("/{city}")
     public ResponseEntity<?> addNewRegion(@PathVariable("city") String name,
                                           @RequestBody WeatherRequest request) {
-        Long id = weatherService.addNewRegionWithWeather(request, name);
+        Long id = weatherService.addNewRegionWithWeather(name, request);
 
         return ResponseEntity.created(getUriWeatherByRegionId(id, request.dateTime())).build();
     }
 
     @Operation(
             summary = "update region weather by time",
-            description = "If weather object was not found, a new object will be created. DateTime format: 'yyyy-MM-ddTHH:mm'"
+            description = "If weather object was not found, a new object will be created. DateTime format: 'HH:mm dd/MM/yyyy'"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", content = {@Content(schema = @Schema())}),

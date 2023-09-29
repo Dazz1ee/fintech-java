@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="foo.fintech.services.WeatherServiceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2023-09-29T19:27:14" hostname="TURING" time="0.067">
+  <properties/>
+  <testcase name="addNewRegionWithWeatherWithSomeThreads()" classname="foo.fintech.services.WeatherServiceTest" time="0.02"/>
+  <testcase name="findWeatherWhenNotExists()" classname="foo.fintech.services.WeatherServiceTest" time="0.008"/>
+  <testcase name="findWeatherByRegionWhenExists()" classname="foo.fintech.services.WeatherServiceTest" time="0.007"/>
+  <testcase name="findWeatherWhenExistsButHasAnotherDateTime()" classname="foo.fintech.services.WeatherServiceTest" time="0.004"/>
+  <testcase name="updateWeatherByRegionWhenExists()" classname="foo.fintech.services.WeatherServiceTest" time="0.006"/>
+  <testcase name="updateWeatherByRegionWhenRegionNotExists()" classname="foo.fintech.services.WeatherServiceTest" time="0.008"/>
+  <testcase name="updateWeatherByRegionWheDateNotExists()" classname="foo.fintech.services.WeatherServiceTest" time="0.003"/>
+  <testcase name="removeWeathersByParameter()" classname="foo.fintech.services.WeatherServiceTest" time="0.005"/>
+  <system-out><![CDATA[2023-09-29T22:27:13.214+03:00  INFO 11832 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [foo.fintech.services.WeatherServiceTest]: WeatherServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2023-09-29T22:27:13.234+03:00  INFO 11832 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration foo.fintech.FintechApplication for test class foo.fintech.services.WeatherServiceTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.1.4)
+
+2023-09-29T22:27:13.290+03:00  INFO 11832 --- [    Test worker] f.fintech.services.WeatherServiceTest    : Starting WeatherServiceTest using Java 19.0.1 with PID 11832 (started by ikati in C:\Users\ikati\Desktop\fintech-java\thirdwork)
+2023-09-29T22:27:13.290+03:00 DEBUG 11832 --- [    Test worker] f.fintech.services.WeatherServiceTest    : Running with Spring Boot v3.1.4, Spring v6.0.12
+2023-09-29T22:27:13.291+03:00  INFO 11832 --- [    Test worker] f.fintech.services.WeatherServiceTest    : The following 1 profile is active: "dev"
+2023-09-29T22:27:13.812+03:00  INFO 11832 --- [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 0 (http)
+2023-09-29T22:27:13.829+03:00  INFO 11832 --- [    Test worker] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-09-29T22:27:13.829+03:00  INFO 11832 --- [    Test worker] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.13]
+2023-09-29T22:27:13.947+03:00  INFO 11832 --- [    Test worker] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-09-29T22:27:13.947+03:00  INFO 11832 --- [    Test worker] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 653 ms
+2023-09-29T22:27:14.164+03:00  INFO 11832 --- [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 55335 (http) with context path ''
+2023-09-29T22:27:14.169+03:00  INFO 11832 --- [    Test worker] f.fintech.services.WeatherServiceTest    : Started WeatherServiceTest in 0.925 seconds (process running for 6.035)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
