@@ -2,12 +2,7 @@
 !/.gitignore
 !README.MD
 !/fintech/
-!/thirdwork/
 /fintech/build/
 .idea/
 /fintech/.gradle/
 /fintech/fintech.iml
-/thirdwork/.gradle/
-/thirdwork/fintech.iml
-/thirdwork/HELP.md
-/thirdwork/build/H
