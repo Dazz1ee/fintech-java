@@ -1,5 +1,6 @@
 server:
   port: 8080
+
 springdoc:
   swagger-ui:
     path: /ui.html
@@ -7,3 +8,14 @@ springdoc:
 logging:
   level:
     foo: DEBUG
+
+resilience4j.ratelimiter:
+  instances:
+    weatherApi:
+      limitForPeriod: 1000000
+      limitRefreshPeriod: 31d
+      timeoutDuration: 1s
+
+api_key: ${API_KEY}
+api_url: "http://api.weatherapi.com/v1"
+

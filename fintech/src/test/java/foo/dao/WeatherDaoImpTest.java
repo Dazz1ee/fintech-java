@@ -45,9 +45,13 @@ class WeatherDaoImpTest {
 
         List<Long> actual = new ArrayList<>();
         List<Thread> threads = new ArrayList<>();
+
         for (Weather weather : weatherRequests) {
             threads.add(new Thread(() -> actual.add(weatherDao.saveWeatherWithNewRegion(weather))));
-            threads.get(threads.size()-1).start();
+        }
+
+        for(Thread thread : threads) {
+            thread.start();
         }
 
         for (Thread thread : threads) {
