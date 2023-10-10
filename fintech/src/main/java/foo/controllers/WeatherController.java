@@ -1,5 +1,6 @@
 package foo.controllers;
 import foo.models.ReturnedTemperature;
+import foo.models.Weather;
 import foo.models.WeatherRequest;
 import foo.services.WeatherService;
 import io.swagger.v3.oas.annotations.Operation;

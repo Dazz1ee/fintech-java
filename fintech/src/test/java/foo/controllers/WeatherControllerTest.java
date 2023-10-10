@@ -1,4 +1,4 @@
-package foo.contollers;
+package foo.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foo.models.ReturnedTemperature;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@WebMvcTest
+@WebMvcTest(controllers = {WeatherController.class})
 class WeatherControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
