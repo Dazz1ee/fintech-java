@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -55,44 +56,38 @@ class ClientConfigTest {
 
 
     @Test
-    void checkRestTemplateInterceptors() {
+    void checkRestTemplateInterceptors() throws JsonProcessingException, URISyntaxException {
         WeatherApiResponse weatherApiResponse = new WeatherApiResponse(null, null);
-        try {
-            mockServer.expect(
-                    requestTo(new URI(String.format("%s/current.json?q=%s&key=%s", url, "London", "aaa"))))
-                    .andExpect(method(HttpMethod.GET))
-                    .andRespond(withStatus(HttpStatus.FOUND)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .body(mapper.writeValueAsString(weatherApiResponse))
-                    );
-            ResponseEntity<WeatherApiResponse> entity = restTemplate.exchange("/current.json?q={q}", HttpMethod.GET, null, WeatherApiResponse.class, "London");
-            assertThat(entity.getBody()).isEqualTo(weatherApiResponse);
-        } catch (Exception e) {
-            fail();
-        }
 
+        mockServer.expect(
+                requestTo(new URI(String.format("%s/current.json?q=%s&key=%s", url, "London", "aaa"))))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(mapper.writeValueAsString(weatherApiResponse))
+                );
+
+        ResponseEntity<WeatherApiResponse> entity = restTemplate.exchange("/current.json?q={q}", HttpMethod.GET, null, WeatherApiResponse.class, "London");
+        assertThat(entity.getBody()).isEqualTo(weatherApiResponse);
     }
     @Test
-    void handleError(){
+    void handleError() throws JsonProcessingException, URISyntaxException {
         Map<String, Map<String, String>> response = new HashMap<>();
         response.put("error", new HashMap<>());
         response.get("error").put("message",  "error");
         response.get("error").put("code", String.valueOf(1006));
-        try {
-            mockServer.expect(
-                            requestTo(new URI(String.format("%s/current.json?q=%s&key=%s", url, "London", "aaa"))))
-                            .andExpect(method(HttpMethod.GET))
-                            .andRespond(withStatus(HttpStatus.BAD_REQUEST)
-                                                    .contentType(MediaType.APPLICATION_JSON)
-                                                    .body(mapper.writeValueAsString(response))
-                    );
-            restTemplate.exchange("/current.json?q={q}", HttpMethod.GET, null, WeatherApiResponse.class, "London");
-        } catch (URISyntaxException | JsonProcessingException e) {
-            fail();
-        }  catch (RuntimeException e) {
-            assertThat(e.getClass()).isEqualTo(WrongLocationException.class);
-        }
 
+        mockServer.expect(
+                        requestTo(new URI(String.format("%s/current.json?q=%s&key=%s", url, "London", "aaa"))))
+                        .andExpect(method(HttpMethod.GET))
+                        .andRespond(withStatus(HttpStatus.BAD_REQUEST)
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .body(mapper.writeValueAsString(response))
+                );
+
+        assertThrows(WrongLocationException.class, () ->
+            restTemplate.exchange("/current.json?q={q}", HttpMethod.GET, null, WeatherApiResponse.class, "London")
+        );
     }
 
 }

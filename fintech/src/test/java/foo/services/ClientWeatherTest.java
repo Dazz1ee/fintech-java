@@ -55,7 +55,7 @@ class ClientWeatherTest {
                 eq(WeatherApiResponse.class),
                 eq("test"))).thenReturn(responseEntity);
         try {
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 11; i++) {
                 assertThat(clientWeather.getCurrentWeatherByRegion("test").getStatusCode()).isEqualTo(HttpStatus.OK);
             }
             fail("Call must end");

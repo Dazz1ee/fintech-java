@@ -3,6 +3,7 @@ package foo.configurations;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foo.exceptions.*;
+import foo.models.WeatherErrorResponse;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -59,24 +60,24 @@ public class ClientConfig {
                 JsonNode error = objectMapper.readTree(response.getBody()).get("error");
                 String message = error.get("message").asText();
                 if (statusCode.is5xxServerError()) {
-                    throw new UnknownWeatherApiException(message);
+                    throw new UnknownWeatherApiException();
                 }
 
                 int errorCode = error.get("code").asInt();
 
                 switch (errorCode) {
-                    case 1002 -> throw new KeyNotProvidedException(message);
+                    case 1002 -> throw new KeyNotProvidedException();
                     case 1003 -> throw new ParameterNotProvidedException(message);
                     case 1005 -> throw new InvalidUrlException(message);
                     case 1006 -> throw new WrongLocationException(message);
-                    case 2006 -> throw new InvalidWeatherApiKeyException(message);
+                    case 2006 -> throw new InvalidWeatherApiKeyException();
                     case 2007 -> throw new ExceededCallsException(message);
-                    case 2008 -> throw new DisabledKeyException(message);
+                    case 2008 -> throw new DisabledKeyException();
                     case 2009 -> throw new NotAllowedQueryException(message);
                     case 9000 -> throw new InvalidJsonBodyException(message);
                     case 9001 -> throw new TooManyLocationsException(message);
-                    case 9999 -> throw new InternalWeatherApiException(message);
-                    default -> throw new UnknownHostException(message);
+                    case 9999 -> throw new InternalWeatherApiException();
+                    default -> throw new UnknownWeatherApiException();
                 }
             }
         };

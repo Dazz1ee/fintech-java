@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 
 public class ParameterNotProvidedException extends CustomException{
     public ParameterNotProvidedException(String errorMessage) {
-        super(HttpStatus.BAD_REQUEST, errorMessage);
+        super(HttpStatus.BAD_REQUEST, String.format("Enter location. %s",
+                errorMessage));
     }
 }

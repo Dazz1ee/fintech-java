@@ -17,39 +17,11 @@ import org.springframework.web.client.HttpClientErrorException;
 @Slf4j
 public class ExceptionController {
 
-    @ExceptionHandler({UnknownWeatherApiException.class, InternalWeatherApiException.class})
+    @ExceptionHandler(CustomException.class)
     public ResponseEntity<WeatherErrorResponse> unknownWeatherError(CustomException weatherApiException) {
-        return ResponseEntity.status(weatherApiException.getHttpStatus()).body(new WeatherErrorResponse("Unknown error"));
+        return ResponseEntity.status(weatherApiException.getHttpStatus()).body(weatherApiException.getErrorMessage());
     }
 
-    @ExceptionHandler({DisabledKeyException.class, InvalidWeatherApiKeyException.class, KeyNotProvidedException.class})
-    public ResponseEntity<WeatherErrorResponse> invalidKey(CustomException weatherApiException) {
-        return ResponseEntity.status(weatherApiException.getHttpStatus()).body(new WeatherErrorResponse("Ooops, service is not available"));
-    }
-
-    @ExceptionHandler(ExceededCallsException.class)
-    public ResponseEntity<WeatherErrorResponse> exceededCalls(CustomException weatherApiException) {
-        return ResponseEntity.status(weatherApiException.getHttpStatus())
-                .body(new WeatherErrorResponse(String.format("Try later. %s", weatherApiException.getErrorMessage())));
-    }
-
-    @ExceptionHandler(ParameterNotProvidedException.class)
-    public ResponseEntity<WeatherErrorResponse> needRequiredParameter(CustomException weatherApiException) {
-        return ResponseEntity.status(weatherApiException.getHttpStatus())
-                .body(new WeatherErrorResponse(String.format("Enter location. %s", weatherApiException.getErrorMessage())));
-    }
-
-    @ExceptionHandler(TooManyLocationsException.class)
-    public ResponseEntity<WeatherErrorResponse> tooManyLocations(CustomException weatherApiException) {
-        return ResponseEntity.status(weatherApiException.getHttpStatus())
-                .body(new WeatherErrorResponse(String.format("Enter less locations. %s", weatherApiException.getErrorMessage())));
-    }
-
-    @ExceptionHandler(WrongLocationException.class)
-    public ResponseEntity<WeatherErrorResponse> locationNotFound(CustomException weatherApiException) {
-        return ResponseEntity.status(weatherApiException.getHttpStatus())
-                .body(new WeatherErrorResponse(String.format("Location not found. %s", weatherApiException.getErrorMessage())));
-    }
     @ExceptionHandler(RequestNotPermitted.class)
     public ResponseEntity<WeatherErrorResponse> locationNotFound() {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
