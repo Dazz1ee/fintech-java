@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="creating-city" author="katin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="city" />
+            </not>
+        </preConditions>
+        <createTable tableName="city">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="creating-weather-type" author="katin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="weather_type" />
+            </not>
+        </preConditions>
+        <createTable tableName="weather_type">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="creating-weather" author="katin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="weather" />
+            </not>
+        </preConditions>
+        <createTable tableName="weather">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="city_id" type="bigint">
+                <constraints references="city(id)" foreignKeyName="fk_city_weather" nullable="false" deleteCascade="true"/>
+            </column>
+            <column name="type_id" type="bigint">
+                <constraints references="weather_type(id)" foreignKeyName="fk_type_weather"/>
+            </column>
+            <column name="temperature" type="double precision">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-indexes" author="katin">
+        <createIndex tableName="weather" indexName="index_weather_type">
+            <column name="type_id"/>
+        </createIndex>
+        <createIndex tableName="weather" indexName="index_city">
+            <column name="city_id"/>
+        </createIndex>
+        <createIndex tableName="weather" indexName="index_date_time">
+            <column name="date_time"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

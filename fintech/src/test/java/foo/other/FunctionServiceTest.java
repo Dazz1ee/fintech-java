@@ -1,6 +1,8 @@
 package foo.other;
 
+import foo.models.City;
 import foo.models.Weather;
+import foo.models.WeatherType;
 import foo.other.FunctionService;
 import org.assertj.core.util.DoubleComparator;
 import org.junit.jupiter.api.AfterEach;
@@ -41,9 +43,9 @@ class FunctionServiceTest {
 
     @Test
     void getAverageTemperatureOfAllRegions() {
-        weathers.add(new Weather(3L, "Tula", 5.031, LocalDateTime.now()));
-        weathers.add(new Weather(1L, "Moscow", 0.1, LocalDateTime.now()));
-        weathers.add(new Weather(0L, "Belgorod", -15.131, LocalDateTime.now()));
+        weathers.add(new Weather(3L, new City(3L, "Tula"), new WeatherType("sunshine"), 5.031, LocalDateTime.now()));
+        weathers.add(new Weather(1L, new City(1L, "Moscow"), new WeatherType("sunshine"), 0.1, LocalDateTime.now()));
+        weathers.add(new Weather(0L, new City(0L, "Belgorod"), new WeatherType("sunshine"), -15.131, LocalDateTime.now()));
 
         double expected = -3.33333;
         double actual = FunctionService.getAverageTemperatureOfAllRegions(weathers);
@@ -62,14 +64,14 @@ class FunctionServiceTest {
 
     @Test
     void getAverageTemperatureByRegion() {
-        weathers.add(new Weather(3L, "Tula", 0.0, LocalDateTime.now()));
-        weathers.add(new Weather(3L, "Tula", 5.0, LocalDateTime.now()));
-        weathers.add(new Weather(1L, "Moscow", 2.0, LocalDateTime.now()));
-        weathers.add(new Weather(1L, "Moscow", -12.0, LocalDateTime.now()));
-        weathers.add(new Weather(0L, "Belgorod", 4.3, LocalDateTime.now()));
-        weathers.add(new Weather(0L, "Belgorod", 1.4, LocalDateTime.now()));
-        weathers.add(new Weather(2L, "Tambov", -10.5, LocalDateTime.now()));
-        weathers.add(new Weather(2L, "Tambov", -5.2, LocalDateTime.now()));
+        weathers.add(new Weather(3L, new City(3L, "Tula"), new WeatherType("sunshine"), 0.0, LocalDateTime.now()));
+        weathers.add(new Weather(3L, new City(3L, "Tula"), new WeatherType("sunshine"), 5.0, LocalDateTime.now()));
+        weathers.add(new Weather(1L, new City(1L, "Moscow"), new WeatherType("sunshine"), 2.0, LocalDateTime.now()));
+        weathers.add(new Weather(1L, new City(1L, "Moscow"), new WeatherType("sunshine"), -12.0, LocalDateTime.now()));
+        weathers.add(new Weather(0L, new City(0L, "Belgorod"), new WeatherType("sunshine"), 4.3, LocalDateTime.now()));
+        weathers.add(new Weather(0L, new City(0L, "Belgorod"), new WeatherType("sunshine"), 1.4, LocalDateTime.now()));
+        weathers.add(new Weather(2L, new City(2L, "Tambov"), new WeatherType("snowing"), -10.5, LocalDateTime.now()));
+        weathers.add(new Weather(2L, new City(2L, "Tambov"), new WeatherType("snowing"), -5.2, LocalDateTime.now()));
 
         Map<Long, Double> expected = new HashMap<>();
         expected.put(3L, 2.5);
@@ -95,14 +97,14 @@ class FunctionServiceTest {
 
     @Test
     void getRegionsWhereTemperatureGreat() {
-        weathers.add(new Weather(3L, "Tula", 7.0, LocalDateTime.now()));
-        weathers.add(new Weather(3L, "Tula", 15.0, LocalDateTime.now()));
-        weathers.add(new Weather(1L, "Moscow", 2.0, LocalDateTime.now()));
-        weathers.add(new Weather(1L, "Moscow", -12.0, LocalDateTime.now()));
-        weathers.add(new Weather(0L, "Belgorod", 4.3, LocalDateTime.now()));
-        weathers.add(new Weather(0L, "Belgorod", 1.4, LocalDateTime.now()));
-        weathers.add(new Weather(2L, "Tambov", -10.5, LocalDateTime.now()));
-        weathers.add(new Weather(2L, "Tambov", -5.2, LocalDateTime.now()));
+        weathers.add(new Weather(3L, new City(3L, "Tula"), new WeatherType("sunshine"), 7.0, LocalDateTime.now()));
+        weathers.add(new Weather(3L, new City(3L, "Tula"), new WeatherType("sunshine"), 15.0, LocalDateTime.now()));
+        weathers.add(new Weather(1L, new City(1L, "Moscow"), new WeatherType("sunshine"), 2.0, LocalDateTime.now()));
+        weathers.add(new Weather(1L, new City(1L, "Moscow"), new WeatherType("sunshine"), -12.0, LocalDateTime.now()));
+        weathers.add(new Weather(0L, new City(0L, "Belgorod"), new WeatherType("sunshine"), 4.3, LocalDateTime.now()));
+        weathers.add(new Weather(0L, new City(0L, "Belgorod"), new WeatherType("sunshine"), 1.4, LocalDateTime.now()));
+        weathers.add(new Weather(2L, new City(2L, "Tambov"), new WeatherType("snowing"), -10.5, LocalDateTime.now()));
+        weathers.add(new Weather(2L, new City(2L, "Tambov"), new WeatherType("snowing"), -5.2, LocalDateTime.now()));
 
         double temperature = 7;
 
@@ -124,8 +126,8 @@ class FunctionServiceTest {
 
     @Test
     void getRegionsWhereTemperatureGreatHasDuplicate() {
-        weathers.add(new Weather(3L, "Tambov", 7.0, LocalDateTime.now()));
-        weathers.add(new Weather(3L, "Tula", 15.0, LocalDateTime.now()));
+        weathers.add(new Weather(3L, new City(3L, "Tambov"), new WeatherType("snowing"), 7.0, LocalDateTime.now()));
+        weathers.add(new Weather(0L, new City(0L, "Tula"), new WeatherType("sunshine"), 15.0, LocalDateTime.now()));
 
         double temperature = 7;
 
@@ -138,10 +140,10 @@ class FunctionServiceTest {
 
     @Test
     void getMapByKeyEqualsLong() {
-        weathers.add(new Weather(3L, "Tula", 5.031, LocalDateTime.now()));
-        weathers.add(new Weather(1L, "Moscow", 1.1, LocalDateTime.now()));
-        weathers.add(new Weather(0L, "Belgorod", -15.131, LocalDateTime.now()));
-        weathers.add(new Weather(0L, "Belgorod", 10.131, LocalDateTime.now()));
+        weathers.add(new Weather(3L, new City(3L, "Tula"), new WeatherType("raining"), 5.031, LocalDateTime.now()));
+        weathers.add(new Weather(1L, new City(1L, "Moscow"), new WeatherType("sunshine"), 1.1, LocalDateTime.now()));
+        weathers.add(new Weather(0L, new City(0L, "Belgorod"), new WeatherType("sunshine"), -15.131, LocalDateTime.now()));
+        weathers.add(new Weather(0L, new City(0L, "Belgorod"), new WeatherType("sunshine"), 10.131, LocalDateTime.now()));
 
         Map<Long, List<Double>> expected = new HashMap<>();
         expected.put(3L, List.of(weathers.get(0).getTemperature()));
@@ -167,10 +169,10 @@ class FunctionServiceTest {
 
     @Test
     void getMapByKeyEqualsTemperature() {
-        weathers.add(new Weather(3L, "Tula", 5.031, LocalDateTime.now()));
-        weathers.add(new Weather(1L, "Moscow", 5.331, LocalDateTime.now()));
-        weathers.add(new Weather(0L, "Belgorod", 15.631, LocalDateTime.now()));
-        weathers.add(new Weather(2L, "Tambov", 10.131, LocalDateTime.now()));
+        weathers.add(new Weather(3L, new City(3L, "Tula"), new WeatherType("raining"), 5.031, LocalDateTime.now()));
+        weathers.add(new Weather(1L, new City(1L, "Moscow"), new WeatherType("sunshine"), 5.331, LocalDateTime.now()));
+        weathers.add(new Weather(0L, new City(0L, "Belgorod"), new WeatherType("sunshine"), 15.631, LocalDateTime.now()));
+        weathers.add(new Weather(2L, new City(2L, "Tambov"), new WeatherType("snowing"), 10.131, LocalDateTime.now()));
 
         Map<Integer, Collection<Weather>> expected = new HashMap<>();
         expected.put(5, List.of(weathers.get(0), weathers.get(1)));

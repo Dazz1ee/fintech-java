@@ -3,7 +3,6 @@ package foo.configurations;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foo.exceptions.*;
-import foo.models.WeatherErrorResponse;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -18,7 +17,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.net.URI;
-import java.net.UnknownHostException;
 
 @Configuration
 @Data

@@ -1,6 +1,8 @@
 package foo.other;
 
+import foo.models.City;
 import foo.models.Weather;
+import foo.models.WeatherType;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -16,7 +18,7 @@ public abstract class FunctionService {
 
     public static Map<Long, Double> getAverageTemperatureByRegion(List<Weather> weathers) {
         return weathers.stream()
-                .collect(Collectors.groupingBy(Weather::getRegionId, Collectors.averagingDouble(Weather::getTemperature)));
+                .collect(Collectors.groupingBy(weather -> weather.getCity().getId(), Collectors.averagingDouble(Weather::getTemperature)));
     }
 
     /** Задание 2 */
@@ -24,9 +26,9 @@ public abstract class FunctionService {
         return distinct(
                 weathers.parallelStream()
                 .filter(weather -> weather.getTemperature() > temperature),
-                Weather::getRegionId
+                weather -> weather.getCity().getId()
                 )
-                .map(Weather::getRegionName)
+                .map(weather -> weather.getCity().getName())
                 .toList();
     }
 
@@ -40,7 +42,7 @@ public abstract class FunctionService {
     public static Map<Long, List<Double>> getMapByKeyEqualsId(List<Weather> list) {
         return list.parallelStream()
                 .collect(Collectors
-                        .groupingBy(Weather::getRegionId,
+                        .groupingBy(weather -> weather.getCity().getId(),
                                 Collectors.mapping(Weather::getTemperature, Collectors.toList())));
     }
 
@@ -58,11 +60,11 @@ public abstract class FunctionService {
         Stream.generate(() -> {
             double temperature = random.nextDouble(upperBound - lowerBound) + lowerBound;
             return List.of(
-                    new Weather(0L, "Belgorod", temperature, LocalDateTime.now()),
-                    new Weather(1L, "Moscow", temperature, LocalDateTime.now()),
-                    new Weather(2L, "Tambov", random.nextDouble(upperBound - lowerBound) + lowerBound, LocalDateTime.now()),
-                    new Weather(3L, "Tula", random.nextDouble(upperBound - lowerBound) + lowerBound, LocalDateTime.now()),
-                    new Weather(4L, "Vladimir", random.nextDouble(upperBound - lowerBound) + lowerBound, LocalDateTime.now())
+                    new Weather(0L, new City(0L, "Belgorod"), new WeatherType(0L, "rainy"), temperature, LocalDateTime.now()),
+                    new Weather(1L, new City(1L, "Moscow"), new WeatherType(0L, "rainy"), temperature, LocalDateTime.now()),
+                    new Weather(2L, new City(2L, "Tambov"), new WeatherType(0L, "rainy"), random.nextDouble(upperBound - lowerBound) + lowerBound, LocalDateTime.now()),
+                    new Weather(3L, new City(3L, "Tula"), new WeatherType(0L, "rainy"), random.nextDouble(upperBound - lowerBound) + lowerBound, LocalDateTime.now()),
+                    new Weather(4L, new City(4L, "Vladimir"), new WeatherType(0L, "rainy"), random.nextDouble(upperBound - lowerBound) + lowerBound, LocalDateTime.now())
             );
         })
         .limit(1000)

@@ -1,9 +1,7 @@
 package foo.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import foo.models.ReturnedTemperature;
-import foo.models.Weather;
-import foo.models.WeatherRequest;
+import foo.models.*;
 import foo.services.WeatherService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -72,7 +70,7 @@ class WeatherControllerTest {
     void getTemperatureByRegionIdWhenWeatherExists() throws Exception {
         LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         String regionName = "Test-test";
-        Weather weather = new Weather(1L, regionName, 32.1, dateTime);
+        Weather weather = new Weather(1L, new City(regionName), new WeatherType("sunshine"), 32.1, dateTime);
         when(weatherService.findWeatherByRegion(regionName, dateTime)).thenReturn(Optional.of(weather.getTemperature()));
 
         mockMvc.perform(
@@ -88,7 +86,7 @@ class WeatherControllerTest {
         String regionName = "Test";
         Long regionId = 1L;
 
-        WeatherRequest weatherRequest = new WeatherRequest(23.1, dateTime);
+        WeatherRequest weatherRequest = new WeatherRequest(23.1, "sunshine", dateTime);
         URI expected = createUri(dateTime, regionId);
         when(weatherService.addNewRegionWithWeather(regionName, weatherRequest)).thenReturn(expected);
 
@@ -107,7 +105,7 @@ class WeatherControllerTest {
     void updateWeatherByRegionNameShouldReturnNoContent() throws Exception {
         LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         String regionName = "Test";
-        WeatherRequest weatherRequest = new WeatherRequest(23.1, dateTime);
+        WeatherRequest weatherRequest = new WeatherRequest(23.1, "sunshine", dateTime);
         when(weatherService.updateWeatherByRegion(regionName, weatherRequest)).thenReturn(Optional.empty());
 
         mockMvc.perform(
@@ -121,7 +119,7 @@ class WeatherControllerTest {
     void updateWeatherByRegionNameShouldReturnCreated() throws Exception {
         LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         String regionName = "Test";
-        WeatherRequest weatherRequest = new WeatherRequest(23.1, dateTime);
+        WeatherRequest weatherRequest = new WeatherRequest(23.1, "sunshine", dateTime);
         URI expected = createUri(dateTime, 0L);
         when(weatherService.updateWeatherByRegion(regionName, weatherRequest)).thenReturn(Optional.of(expected));
 
