@@ -3,7 +3,6 @@ package foo.other;
 import foo.models.City;
 import foo.models.Weather;
 import foo.models.WeatherType;
-import foo.other.FunctionService;
 import org.assertj.core.util.DoubleComparator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;

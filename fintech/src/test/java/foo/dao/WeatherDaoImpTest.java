@@ -3,13 +3,9 @@ package foo.dao;
 import foo.models.City;
 import foo.models.Weather;
 import foo.models.WeatherType;
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -27,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"api_key: aaa"})
-//@DataJpaTest(properties = {"api_key: aaa"})
 class WeatherDaoImpTest {
 
     @Autowired
@@ -35,11 +30,6 @@ class WeatherDaoImpTest {
 
     @Autowired
     DataSource dataSource;
-
-//    public WeatherDaoImpTest(WeatherDao weatherDao, DataSource dataSource) {
-//        this.weatherDao = weatherDao;
-//        this.dataSource = dataSource;
-//    }
 
     @BeforeEach()
     public  void deleteWeathers() throws SQLException {
