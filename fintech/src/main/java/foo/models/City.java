@@ -3,6 +3,7 @@ package foo.models;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ public class City {
 
     @OneToMany(mappedBy = "weather", fetch = FetchType.LAZY)
     @Transient
+    @ToString.Exclude
     private List<Weather> weatherList;
 
     public City(String cityName) {

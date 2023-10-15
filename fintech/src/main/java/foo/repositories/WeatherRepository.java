@@ -1,18 +1,16 @@
 package foo.repositories;
 
 import foo.models.Weather;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.data.repository.RepositoryDefinition;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-@Repository
-@ConditionalOnProperty(value = "hibernate.enabled", havingValue = "true")
 public interface WeatherRepository extends JpaRepository<Weather, Long>{
 
     @Query("SELECT w FROM Weather w JOIN w.city JOIN w.weatherType where  w.date = :date and w.city.id = :id")

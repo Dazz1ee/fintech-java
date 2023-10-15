@@ -9,8 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository
-@ConditionalOnProperty(value = "hibernate.enabled", havingValue = "true")
 public interface CityRepository extends JpaRepository<City, Long> {
     @Query("SELECT c.id FROM City c where c.name = :name")
     Optional<Long> findByName(@Param("name") String name);

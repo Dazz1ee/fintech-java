@@ -29,7 +29,9 @@ resilience4j.ratelimiter:
       limitRefreshPeriod: 31d
       timeoutDuration: 1s
 
-hibernate.enabled: true
+
+# possible options: jdbc, jpa, in-memory
+weather-dao-realization: jdbc
 api_key: ${API_KEY}
 api_url: "http://api.weatherapi.com/v1"
 

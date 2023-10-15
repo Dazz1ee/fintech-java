@@ -14,8 +14,6 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-@Component
-@ConditionalOnProperty(value = "hibernate.enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class WeatherDaoJpa implements WeatherDao{
     private final WeatherRepository weatherRepository;

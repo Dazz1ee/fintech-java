@@ -14,4 +14,10 @@ public abstract class CustomException extends RuntimeException{
         this.errorMessage = new WeatherErrorResponse(errorMessage);
     }
 
+    protected CustomException(HttpStatus httpStatus, String errorMessage, Throwable cause) {
+        super(cause);
+        this.httpStatus = httpStatus;
+        this.errorMessage = new WeatherErrorResponse(errorMessage);
+    }
+
 }

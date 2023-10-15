@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ public class WeatherType {
 
     @OneToMany(mappedBy = "weather", fetch = FetchType.LAZY)
     @Transient
+    @ToString.Exclude
     private List<Weather> weatherList;
 
     public WeatherType(Long id, String type) {
