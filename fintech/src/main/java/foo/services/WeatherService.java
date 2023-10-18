@@ -5,9 +5,9 @@ import foo.models.City;
 import foo.models.Weather;
 import foo.models.WeatherRequest;
 import foo.models.WeatherType;
+import foo.other.CustomUriBuilder;
 import lombok.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -30,18 +30,20 @@ public class WeatherService {
     public URI addNewRegionWithWeather(String cityName, WeatherRequest weatherWithNewRegion) {
         Weather weather = Weather.builder()
                 .city(new City(cityName))
-                .weatherType(new WeatherType(weatherWithNewRegion.weatherType()))
+                .weatherType(new WeatherType(weatherWithNewRegion.weatherType().toLowerCase()))
                 .date(weatherWithNewRegion.dateTime())
                 .temperature(weatherWithNewRegion.temperature())
                 .build();
 
-        return getUriWeatherByRegionId(weatherDao.saveWeatherWithNewRegion(weather), weatherWithNewRegion.dateTime());
+        return CustomUriBuilder.getUriWeatherByRegionId(
+                weatherDao.saveWeatherWithNewRegion(weather),
+                weatherWithNewRegion.dateTime());
     }
 
     public Optional<URI> updateWeatherByRegion(String name, WeatherRequest weatherRequest) {
         Weather weather = Weather.builder()
                 .city(new City(name))
-                .weatherType(new WeatherType(weatherRequest.weatherType()))
+                .weatherType(new WeatherType(weatherRequest.weatherType().toLowerCase()))
                 .date(weatherRequest.dateTime())
                 .temperature(weatherRequest.temperature())
                 .build();
@@ -51,7 +53,7 @@ public class WeatherService {
         if(regionId == -1) {
             return Optional.empty();
         }
-        return Optional.of(getUriWeatherByRegionId(regionId, weatherRequest.dateTime()));
+        return Optional.of(CustomUriBuilder.getUriWeatherByRegionId(regionId, weather.getDate()));
     }
 
     public  void removeWeathersByRegionId(Long regionId) {
@@ -61,18 +63,6 @@ public class WeatherService {
     public void removeWeathersByRegionName(String name) {
         weatherDao.deleteByRegionName(name);
     }
-
-    private URI getUriWeatherByRegionId(Long regionId, LocalDateTime dateTime) {
-        return UriComponentsBuilder.newInstance()
-                .scheme("http")
-                .host("localhost")
-                .port(8080)
-                .path("/api/weather/{id}")
-                .queryParam("date", dateTime)
-                .buildAndExpand(regionId)
-                .toUri();
-    }
-
 
 
 }

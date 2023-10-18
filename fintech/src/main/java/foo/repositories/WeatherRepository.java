@@ -3,8 +3,6 @@ package foo.repositories;
 import foo.models.Weather;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.data.repository.RepositoryDefinition;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +19,8 @@ public interface WeatherRepository extends JpaRepository<Weather, Long>{
     @Query("SELECT w.id FROM Weather w JOIN w.city JOIN w.weatherType where  w.date = :date and w.city.name = :name")
     Optional<Long> getIdByDateAndCityName(@Param("name") String name, @Param("date") LocalDateTime dateTime);
 
-    @Transactional
     Long deleteByCityName(String name);
 
-    @Transactional
     Long deleteByCityId(Long id);
 
 }

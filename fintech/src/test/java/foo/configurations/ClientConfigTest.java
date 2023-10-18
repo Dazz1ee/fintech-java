@@ -12,10 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 import java.net.URI;
@@ -29,7 +31,8 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SpringBootTest(properties = "api_key: aaa")
+@SpringBootTest(classes = {ClientConfig.class, ObjectMapper.class})
+@ActiveProfiles("test")
 class ClientConfigTest {
     @Autowired
     @Qualifier("weatherTemplate")

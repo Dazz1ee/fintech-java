@@ -2,40 +2,56 @@ package foo.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foo.exceptions.TooManyLocationsException;
-import foo.services.ClientWeather;
+import foo.models.CityNameRequest;
+import foo.other.CustomUriBuilder;
+import foo.services.WeatherApiService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.mockito.Mockito.when;
 
-@WebMvcTest(controllers = WeatherApiController.class, properties = "api_key= aaa")
+@WebMvcTest(controllers = {WeatherApiController.class, ObjectMapper.class})
+@ActiveProfiles("test")
 class WeatherApiControllerTest {
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
-    private ClientWeather clientWeather;
+    private WeatherApiService weatherApiService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
     void getWeatherWhenOk() throws Exception {
-        when(clientWeather.getCurrentWeatherByRegion("Test")).thenReturn(ResponseEntity.ok().build());
+        when(weatherApiService.getCurrentWeatherByRegion("Test")).thenReturn(ResponseEntity.ok().build());
         mockMvc.perform(get(new URI(String.format("/remote/api/weather/%s", "Test")))).andExpect(status().isOk());
     }
 
+
     @Test
     void exceptionHandleTest() throws Exception {
-        when(clientWeather.getCurrentWeatherByRegion("Test")).thenThrow(new TooManyLocationsException("message"));
+        when(weatherApiService.getCurrentWeatherByRegion("Test")).thenThrow(new TooManyLocationsException("message"));
         mockMvc.perform(get(String.format("/remote/api/weather/%s", "Test"))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void saveWeather() throws Exception {
+        URI uri = CustomUriBuilder.getUriWeatherByRegionId(1L, LocalDateTime.now());
+        when(weatherApiService.saveWeather("Test"))
+                .thenReturn(uri);
+        mockMvc.perform(post(new URI("/remote/api/weather")).content(objectMapper.writeValueAsString(new CityNameRequest("Test"))).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated()).andExpect(header().string("Location", uri.toString()));
     }
 }

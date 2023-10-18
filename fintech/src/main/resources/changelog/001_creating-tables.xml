@@ -66,11 +66,12 @@
         <createIndex tableName="weather" indexName="index_weather_type">
             <column name="type_id"/>
         </createIndex>
-        <createIndex tableName="weather" indexName="index_city">
+        <createIndex tableName="weather" indexName="index_city_date">
             <column name="city_id"/>
-        </createIndex>
-        <createIndex tableName="weather" indexName="index_date_time">
             <column name="date_time"/>
+        </createIndex>
+        <createIndex tableName="city" indexName="index_city_name">
+            <column name="name"/>
         </createIndex>
     </changeSet>
 
