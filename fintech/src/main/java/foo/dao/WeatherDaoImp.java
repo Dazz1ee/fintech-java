@@ -1,15 +1,12 @@
 package foo.dao;
 
 import foo.models.Weather;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
-@Repository
 public class WeatherDaoImp implements WeatherDao{
     private final AtomicLong nextId;
     private final List<Weather> weathers;
@@ -17,22 +14,24 @@ public class WeatherDaoImp implements WeatherDao{
     @Override
     public Optional<Weather> findByRegionId(Long id, LocalDateTime dateTime) {
         return weathers.parallelStream()
-                .filter(weather -> weather.getDate().equals(dateTime) && weather.getRegionId().equals(id))
+                .filter(weather -> weather.getDate().equals(dateTime) && weather.getCity().getId().equals(id))
                 .findFirst();
     }
 
     @Override
     public Optional<Weather> findByRegionName(String name, LocalDateTime dateTime) {
         return weathers.parallelStream()
-                .filter(weather -> weather.getDate().equals(dateTime) && weather.getRegionName().equals(name))
+                .filter(weather -> weather.getDate().equals(dateTime) && weather.getCity().getName().equals(name))
                 .findFirst();
     }
 
     @Override
     public Long saveWeatherWithNewRegion(Weather weather) {
-        weather.setRegionId(nextId.getAndIncrement());
-        weathers.add(weather);
-        return weather.getRegionId();
+        weather.getCity().setId(nextId.getAndIncrement());
+        synchronized (weathers) {
+            weathers.add(weather);
+        }
+        return weather.getCity().getId();
     }
 
     @Override
@@ -40,18 +39,18 @@ public class WeatherDaoImp implements WeatherDao{
         Optional<Weather> weather = weathers.stream()
                 .filter(temporary -> temporary.getDate()
                         .equals(temporaryWeather.getDate()) &&
-                        temporary.getRegionName().equals(temporaryWeather.getRegionName()))
+                        temporary.getCity().getName().equals(temporaryWeather.getCity().getName()))
                 .findFirst();
 
         if (weather.isPresent()) {
             weather.get().setTemperature(temporaryWeather.getTemperature());
         } else {
             Long regionId = weathers.stream()
-                    .filter(temporary -> temporary.getRegionName().equals(temporaryWeather.getRegionName()))
-                    .map(Weather::getRegionId).findFirst()
+                    .filter(temporary -> temporary.getCity().getName().equals(temporaryWeather.getCity().getName()))
+                    .map(element -> element.getCity().getId()).findFirst()
                     .orElseGet(nextId::getAndIncrement);
 
-            temporaryWeather.setRegionId(regionId);
+            temporaryWeather.getCity().setId(regionId);
             weathers.add(temporaryWeather);
             return regionId;
         }
@@ -61,12 +60,12 @@ public class WeatherDaoImp implements WeatherDao{
 
     @Override
     public Boolean deleteByRegionName(String regionName) {
-        return weathers.removeIf(element -> element.getRegionName().equals(regionName));
+        return weathers.removeIf(element -> element.getCity().getName().equals(regionName));
     }
 
     @Override
     public Boolean deleteByRegionId(Long regionId) {
-        return weathers.removeIf(element -> element.getRegionId().equals(regionId));
+        return weathers.removeIf(element -> element.getCity().getId().equals(regionId));
     }
 
     public WeatherDaoImp() {

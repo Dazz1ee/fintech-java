@@ -1,8 +1,10 @@
 package foo.services;
 
 import foo.dao.WeatherDao;
+import foo.models.City;
 import foo.models.Weather;
 import foo.models.WeatherRequest;
+import foo.models.WeatherType;
 import lombok.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -25,9 +27,10 @@ public class WeatherService {
         return weatherDao.findByRegionName(name, dateTime).map(Weather::getTemperature);
     }
 
-    public URI addNewRegionWithWeather(String regionName, WeatherRequest weatherWithNewRegion) {
+    public URI addNewRegionWithWeather(String cityName, WeatherRequest weatherWithNewRegion) {
         Weather weather = Weather.builder()
-                .regionName(regionName)
+                .city(new City(cityName))
+                .weatherType(new WeatherType(weatherWithNewRegion.weatherType()))
                 .date(weatherWithNewRegion.dateTime())
                 .temperature(weatherWithNewRegion.temperature())
                 .build();
@@ -37,7 +40,8 @@ public class WeatherService {
 
     public Optional<URI> updateWeatherByRegion(String name, WeatherRequest weatherRequest) {
         Weather weather = Weather.builder()
-                .regionName(name)
+                .city(new City(name))
+                .weatherType(new WeatherType(weatherRequest.weatherType()))
                 .date(weatherRequest.dateTime())
                 .temperature(weatherRequest.temperature())
                 .build();

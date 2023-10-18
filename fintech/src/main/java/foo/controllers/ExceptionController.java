@@ -1,12 +1,10 @@
 package foo.controllers;
 
 import foo.exceptions.*;
-import foo.models.Weather;
 import foo.models.WeatherErrorResponse;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;

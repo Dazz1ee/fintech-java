@@ -4,17 +4,7 @@ import foo.models.City;
 import foo.models.Weather;
 import foo.models.WeatherType;
 import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.EnabledIf;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,53 +13,45 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"api_key: aaa"})
-@EnabledIf(expression = "#{'${weather-dao-realization}' != 'in-memory'}", loadContext = true)
-class WeatherDaoImpTest {
+class WeatherDaoInMemoryTest {
 
-    @Autowired
     WeatherDao weatherDao;
 
-    @Autowired
-    DataSource dataSource;
-
-    @BeforeEach()
-    public  void deleteWeathers() throws SQLException {
-        Connection connection = dataSource.getConnection();
-        connection.prepareStatement("TRUNCATE TABLE weather").execute();
-        connection.close();
+    @BeforeAll
+    public void init() {
+        weatherDao = new WeatherDaoImp();
     }
-
 
     @Test
     @Order(1)
-    void saveNewRegionWithWeatherWithSomeThreads() throws SQLException {
-        LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+    void saveNewRegionWithWeatherWithSomeThreads() {
+        LocalDateTime dateTime = LocalDateTime.now();
         List<Weather> weatherRequests = List.of(
                 Weather.builder()
-                        .temperature(21.1)
-                        .city(new City("Test1"))
+                        .temperature(11.1)
                         .weatherType(new WeatherType("sunshine"))
+                        .city(new City("Test1"))
                         .date(dateTime)
                         .build(),
                 Weather.builder()
                         .temperature(12.1)
+                        .weatherType(new WeatherType("sunshine"))
                         .city(new City("Test2"))
-                        .weatherType(new WeatherType("raining"))
                         .date(dateTime)
                         .build(),
                 Weather.builder()
                         .temperature(-13.1)
+                        .weatherType(new WeatherType("sunshine"))
                         .city(new City("Test3"))
-                        .weatherType(new WeatherType("snowing"))
                         .date(dateTime)
                         .build()
         );
 
+        List<Long> actual = new ArrayList<>();
         List<Thread> threads = new ArrayList<>();
 
         for (Weather weather : weatherRequests) {
-            threads.add(new Thread(() -> weatherDao.saveWeatherWithNewRegion(weather)));
+            threads.add(new Thread(() -> actual.add(weatherDao.saveWeatherWithNewRegion(weather))));
         }
 
         for(Thread thread : threads) {
@@ -84,23 +66,7 @@ class WeatherDaoImpTest {
             }
         }
 
-        Connection connection = dataSource.getConnection();
-        String sql = "SELECT * FROM weather JOIN city ON weather.city_id = city.id JOIN weather_type ON weather.type_id = weather_type.id";
-        PreparedStatement preparedStatement = connection.prepareStatement(sql);
-        ResultSet resultSet = preparedStatement.executeQuery();
-        int i = 0;
-
-        while (resultSet.next()) {
-            i++;
-            Weather actualWeather = new Weather(resultSet.getLong("weather.id"),
-                    new City(resultSet.getLong("city.id"), resultSet.getString("city.name")),
-                    new WeatherType(resultSet.getLong("weather_type.id"), resultSet.getString("weather_type.type")),
-                    resultSet.getDouble("weather.temperature"),
-                    resultSet.getObject("weather.date_time", LocalDateTime.class));
-            assertThat(weatherRequests).contains(actualWeather);
-        }
-
-        assertThat(i).isEqualTo(3);
+        assertThat(actual).containsExactlyInAnyOrder(0L, 1L, 2L);
     }
 
     @Test
@@ -114,15 +80,15 @@ class WeatherDaoImpTest {
     @Test
     @Order(3)
     void findWeatherByRegionWhenExists() {
-        LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        LocalDateTime dateTime = LocalDateTime.now();
         Long id = weatherDao.saveWeatherWithNewRegion(Weather.builder()
-                .city(new City("Test"))
                 .weatherType(new WeatherType("sunshine"))
+                .city(new City("For find"))
                 .date(dateTime)
                 .temperature(13.2)
                 .build());
 
-        Optional<Weather> actual = weatherDao.findByRegionName("Test", dateTime);
+        Optional<Weather> actual = weatherDao.findByRegionName("For find", dateTime);
 
         assertThat(actual).isPresent();
         assertThat(actual.get().getCity().getId()).isEqualTo(id);
@@ -131,10 +97,10 @@ class WeatherDaoImpTest {
     @Test
     @Order(4)
     void findWeatherWhenExistsButHasAnotherDateTime() {
-        LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        LocalDateTime dateTime = LocalDateTime.now();
         Long id = weatherDao.saveWeatherWithNewRegion(Weather.builder()
-                .city(new City("Test"))
                 .weatherType(new WeatherType("sunshine"))
+                .city(new City("Test"))
                 .date(dateTime)
                 .temperature(13.2)
                 .build());
@@ -147,10 +113,10 @@ class WeatherDaoImpTest {
     @Test
     @Order(5)
     void updateWeatherByRegionWhenExists() {
-        LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        LocalDateTime dateTime = LocalDateTime.now();
         Weather weather = Weather.builder()
-                .city(new City("Test"))
                 .weatherType(new WeatherType("sunshine"))
+                .city(new City("Will be updated"))
                 .date(dateTime)
                 .temperature(13.2)
                 .build();
@@ -158,8 +124,8 @@ class WeatherDaoImpTest {
         Long id = weatherDao.saveWeatherWithNewRegion(weather);
 
         Weather willBeUpdated = Weather.builder()
-                .city(new City("Test"))
-                .weatherType(new WeatherType("raining"))
+                .weatherType(new WeatherType("sunshine"))
+                .city(new City("Will be updated"))
                 .date(dateTime)
                 .temperature(5.0)
                 .build();
@@ -179,8 +145,8 @@ class WeatherDaoImpTest {
     void updateWeatherByRegionWhenRegionNotExists() {
         LocalDateTime dateTime = LocalDateTime.now();
         Weather willBeCreated = Weather.builder()
-                .city(new City("Test"))
                 .weatherType(new WeatherType("sunshine"))
+                .city(new City("Will be created"))
                 .date(dateTime)
                 .temperature(13.2)
                 .build();
@@ -195,87 +161,74 @@ class WeatherDaoImpTest {
     @Test
     @Order(7)
     void updateWeatherByRegionWhenDateNotExists() {
-        LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-
+        LocalDateTime dateTime = LocalDateTime.now();
         Weather weather = Weather.builder()
-                .city(new City("Test"))
                 .weatherType(new WeatherType("sunshine"))
+                .city(new City("Create for update"))
                 .date(dateTime)
                 .temperature(13.2)
                 .build();
         weatherDao.saveWeatherWithNewRegion(weather);
 
         Weather willBeCreated = Weather.builder()
-                .city(new City("Test"))
                 .weatherType(new WeatherType("sunshine"))
+                .city(new City("Create for update"))
                 .date(dateTime.plusMinutes(1))
                 .temperature(13.2)
                 .build();
 
         Long actual = weatherDao.updateByRegionNameAndCreateIfNotExists(willBeCreated);
 
-            assertThat(actual).isEqualTo(willBeCreated.getCity().getId()).isEqualTo(weather.getCity().getId());
+        assertThat(actual).isEqualTo(willBeCreated.getCity().getId()).isEqualTo(weather.getCity().getId());
     }
 
     @Test
     @Order(8)
-    void deleteByRegionName() throws SQLException {
-        LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-
+    void deleteByRegionName() {
+        LocalDateTime dateTime = LocalDateTime.now();
         String regionName = "Will be created";
         Weather weather1 = Weather.builder()
-                .city(new City(regionName))
                 .weatherType(new WeatherType("sunshine"))
+                .city(new City(regionName))
                 .date(dateTime)
                 .temperature(13.2)
                 .build();
 
         Weather weather2 = Weather.builder()
-                .city(new City(regionName))
                 .weatherType(new WeatherType("sunshine"))
-                .date(dateTime.plusMinutes(1))
-                .temperature(13.2)
-                .build();
-        Long cityId = weatherDao.saveWeatherWithNewRegion(weather1);
-        weatherDao.saveWeatherWithNewRegion(weather2);
-
-        weatherDao.deleteByRegionName(weather1.getCity().getName());
-        Connection connection = dataSource.getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(id) FROM weather WHERE city_id = ?");
-        preparedStatement.setLong(1, cityId);
-
-        ResultSet resultSet = preparedStatement.executeQuery();
-        resultSet.next();
-        int countRow = resultSet.getInt(1);
-
-        assertThat(countRow).isZero();
-    }
-
-    @Test
-    @Order(9)
-    void deleteByRegionId() throws SQLException {
-        LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-
-        String regionName = "Will be created";
-        Weather weather1 = Weather.builder()
                 .city(new City(regionName))
-                .weatherType(new WeatherType("sunshine"))
                 .date(dateTime)
                 .temperature(13.2)
                 .build();
 
+        weatherDao.saveWeatherWithNewRegion(weather1);
+        weatherDao.saveWeatherWithNewRegion(weather2);
+
+        Boolean actual  = weatherDao.deleteByRegionName(weather1.getCity().getName());
+
+        assertThat(actual).isTrue();
+        assertThat(weatherDao.findByRegionName(regionName, dateTime)).isEmpty();
+    }
+
+    @Test
+    @Order(9)
+    void deleteByRegionId() {
+        LocalDateTime dateTime = LocalDateTime.now();
+        String regionName = "Will be created";
+        Weather weather1 = Weather.builder()
+                .weatherType(new WeatherType("sunshine"))
+                .city(new City(regionName))
+                .date(dateTime)
+                .temperature(13.2)
+                .build();
+
+
         Long regionId = weatherDao.saveWeatherWithNewRegion(weather1);
 
-        weatherDao.deleteByRegionId(regionId);
-        Connection connection = dataSource.getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(id) FROM weather WHERE city_id = ?");
-        preparedStatement.setLong(1, regionId);
+        Boolean actual  = weatherDao.deleteByRegionId(regionId);
 
-        ResultSet resultSet = preparedStatement.executeQuery();
-        resultSet.next();
-        int countRow = resultSet.getInt(1);
-
-        assertThat(countRow).isZero();
+        assertThat(actual).isTrue();
+        assertThat(weatherDao.findByRegionId(regionId, dateTime)).isEmpty();
     }
 
 }
