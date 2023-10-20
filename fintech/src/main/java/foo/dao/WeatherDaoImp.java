@@ -2,9 +2,9 @@ package foo.dao;
 
 import foo.models.Weather;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class WeatherDaoImp implements WeatherDao{
@@ -52,9 +52,7 @@ public class WeatherDaoImp implements WeatherDao{
         }
 
         weather.setId(nextWeatherId.getAndIncrement());
-        synchronized (this) {
-            weathers.add(weather);
-        }
+        weathers.add(weather);
         return weather.getCity().getId();
     }
 
@@ -101,6 +99,6 @@ public class WeatherDaoImp implements WeatherDao{
         nextWeatherId = new AtomicLong(0L);
         nextCityId = new AtomicLong(0L);
         nextTypeId = new AtomicLong(0L);
-        weathers = new ArrayList<>();
+        weathers = new CopyOnWriteArrayList<>();
     }
 }

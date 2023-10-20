@@ -1,17 +1,11 @@
 package foo.dao;
 
-import foo.configurations.JdbcConfig;
-import foo.configurations.JpaConfig;
-import foo.exceptions.CreateWeatherException;
-import foo.exceptions.CustomSQLException;
 import foo.exceptions.InvalidWeatherType;
 import foo.models.City;
 import foo.models.Weather;
 import foo.models.WeatherType;
-import foo.other.WeatherMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.EnabledIf;

@@ -1,6 +1,7 @@
 package foo.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import foo.configurations.UriBuilderConfig;
 import foo.exceptions.TooManyLocationsException;
 import foo.models.CityNameRequest;
 import foo.other.CustomUriBuilder;
@@ -22,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.mockito.Mockito.when;
 
-@WebMvcTest(controllers = {WeatherApiController.class, ObjectMapper.class})
+@WebMvcTest(controllers = {WeatherApiController.class, ObjectMapper.class, UriBuilderConfig.class})
 @ActiveProfiles("test")
 class WeatherApiControllerTest {
     @Autowired

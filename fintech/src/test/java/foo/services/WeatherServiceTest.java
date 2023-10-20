@@ -1,16 +1,20 @@
 package foo.services;
 
+import foo.configurations.UriBuilderConfig;
 import foo.dao.WeatherDao;
 import foo.models.City;
 import foo.models.Weather;
 import foo.models.WeatherRequest;
 import foo.models.WeatherType;
+import foo.other.CustomUriBuilder;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
@@ -29,9 +33,15 @@ class WeatherServiceTest {
 
     @InjectMocks
     WeatherService weatherService;
-
     @Mock
     WeatherDao weatherDao;
+
+    @BeforeAll
+    public void setUriBuilder(){
+        CustomUriBuilder.setScheme("http");
+        CustomUriBuilder.setPort(8080);
+        CustomUriBuilder.setHost("localhost");
+    }
 
     private URI createUri(LocalDateTime dateTime, Long regionId) {
         return UriComponentsBuilder.newInstance()

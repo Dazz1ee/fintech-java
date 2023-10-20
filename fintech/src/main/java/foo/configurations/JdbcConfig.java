@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import foo.dao.WeatherDao;
 import foo.dao.WeatherDaoJdbc;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,12 +14,21 @@ import javax.sql.DataSource;
 @Configuration
 @ConditionalOnProperty(value = "weather-dao-realization", havingValue = "jdbc")
 public class JdbcConfig {
+    @Value("${spring.datasource.url}")
+    private String jdbcUrl;
+
+    @Value("${spring.datasource.username}")
+    private String username;
+
+    @Value("${spring.datasource.password}")
+    private String password;
+
     @Bean(name = "customHikariConfig")
     public HikariConfig hikariConfig() {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:h2:mem:test");
-        config.setUsername("sa");
-        config.setPassword("password");
+        config.setJdbcUrl(jdbcUrl);
+        config.setUsername(username);
+        config.setPassword(password);
         return config;
     }
 

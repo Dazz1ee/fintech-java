@@ -1,9 +1,6 @@
 package foo.dao;
 
-import foo.exceptions.CreateWeatherException;
-import foo.exceptions.CustomSQLException;
-import foo.exceptions.InvalidWeatherType;
-import foo.exceptions.UpdateWeatherException;
+import foo.exceptions.*;
 import foo.models.Weather;
 import foo.models.WeatherType;
 import foo.other.WeatherMapper;
@@ -25,12 +22,7 @@ public class WeatherDaoJdbc implements WeatherDao {
 
     @Override
     public Optional<Weather> findByRegionId(Long id, LocalDateTime dateTime) {
-        Connection connection;
-        try {
-            connection = dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new CustomSQLException(e);
-        }
+        Connection connection = getConnection();
 
         try (connection) {
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
@@ -50,28 +42,22 @@ public class WeatherDaoJdbc implements WeatherDao {
 
             preparedStatement.close();
             connection.commit();
-            connection.setAutoCommit(true);
 
             return result;
         } catch (SQLException exception) {
             try {
                 connection.rollback();
             } catch (SQLException e) {
-                throw new CustomSQLException(e);
+                throw new RollbackException(e);
             }
 
-            throw new CustomSQLException(exception);
+            throw new UnknownSQLException(exception);
         }
     }
 
     @Override
     public Optional<Weather> findByRegionName(String name, LocalDateTime dateTime) {
-        Connection connection;
-        try {
-            connection = dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new CustomSQLException(e);
-        }
+        Connection connection = getConnection();
 
         try (connection) {
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
@@ -92,17 +78,16 @@ public class WeatherDaoJdbc implements WeatherDao {
 
             preparedStatement.close();
             connection.commit();
-            connection.setAutoCommit(true);
 
             return result;
         } catch (SQLException exception) {
             try {
                 connection.rollback();
             } catch (SQLException e) {
-                throw new CustomSQLException(e);
+                throw new RollbackException(e);
             }
 
-            throw new CustomSQLException(exception);
+            throw new UnknownSQLException(exception);
         }
     }
 
@@ -118,10 +103,25 @@ public class WeatherDaoJdbc implements WeatherDao {
             PreparedStatement getCityIdStatement = connection.prepareStatement("SELECT id FROM city WHERE name = ?");
             getCityIdStatement.setString(1, weather.getCity().getName());
             ResultSet resultSet = getCityIdStatement.executeQuery();
-            cityId = WeatherMapper.getId(resultSet).orElseThrow(CreateWeatherException::new);
+            cityId = WeatherMapper.getId(resultSet).orElseThrow(() -> {
+                try {
+                    connection.rollback();
+                } catch (SQLException e) {
+                    return new RollbackException(e);
+                }
+                return new CreateWeatherException();
+            });
+            getCityIdStatement.close();
         } else {
             ResultSet resultSet = createCity.getGeneratedKeys();
-            cityId = WeatherMapper.getId(resultSet).orElseThrow(CreateWeatherException::new);
+            cityId = WeatherMapper.getId(resultSet).orElseThrow(() -> {
+                try {
+                    connection.rollback();
+                } catch (SQLException e) {
+                    return new RollbackException(e);
+                }
+                return new CreateWeatherException();
+            });
         }
 
         createCity.close();
@@ -130,12 +130,7 @@ public class WeatherDaoJdbc implements WeatherDao {
 
     @Override
     public Long saveWeatherWithNewRegion(Weather weather) {
-        Connection connection;
-        try {
-            connection = dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new CustomSQLException(e);
-        }
+        Connection connection = getConnection();
 
         try (connection) {
             connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
@@ -147,7 +142,15 @@ public class WeatherDaoJdbc implements WeatherDao {
             statementForTypeId.setString(1, weather.getWeatherType().getType());
             ResultSet resultSetForTypeId = statementForTypeId.executeQuery();
 
-            weather.getWeatherType().setId(WeatherMapper.getId(resultSetForTypeId).orElseThrow(InvalidWeatherType::new));
+            weather.getWeatherType().setId(WeatherMapper.getId(resultSetForTypeId).orElseThrow(() -> {
+                try {
+                    connection.rollback();
+                } catch (SQLException e) {
+                    throw new RollbackException(e);
+                }
+
+                return new InvalidWeatherType();
+            }));
             statementForTypeId.close();
 
             String createNewWeatherSql =
@@ -162,37 +165,39 @@ public class WeatherDaoJdbc implements WeatherDao {
 
 
             if (!isCreated) {
+                connection.rollback();
                 throw new CreateWeatherException();
             }
 
             ResultSet weatherIdSet = preparedStatementNewWeather.getGeneratedKeys();
-            weather.setId(WeatherMapper.getId(weatherIdSet).orElseThrow(CreateWeatherException::new));
+            weather.setId(WeatherMapper.getId(weatherIdSet).orElseThrow(() -> {
+                try {
+                    connection.rollback();
+                } catch (SQLException e) {
+                    return new RollbackException(e);
+                }
+                return new CreateWeatherException();
+            }));
 
             preparedStatementNewWeather.close();
             connection.commit();
-            connection.setAutoCommit(true);
 
             return cityId;
         } catch (SQLException exception) {
             try {
                 connection.rollback();
             } catch (SQLException e) {
-                throw new CustomSQLException(e);
+                throw new RollbackException(e);
             }
 
-            throw new CustomSQLException(exception);
+            throw new UnknownSQLException(exception);
         }
     }
 
 
     @Override
     public Long saveWeatherAndType(Weather weather) {
-        Connection connection;
-        try {
-            connection = dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new CustomSQLException(e);
-        }
+        Connection connection = getConnection();
 
         try (connection) {
             connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
@@ -215,7 +220,15 @@ public class WeatherDaoJdbc implements WeatherDao {
                     throw new CreateWeatherException();
                 }
 
-                Long typeId = WeatherMapper.getId(typeStatement.getGeneratedKeys()).orElseThrow(CreateWeatherException::new);
+                Long typeId = WeatherMapper.getId(typeStatement.getGeneratedKeys()).orElseThrow(() -> {
+                    try {
+                        connection.rollback();
+                    } catch (SQLException e) {
+                        throw new RollbackException(e);
+                    }
+
+                    return new CreateWeatherException();
+                });
                 weather.setWeatherType(new WeatherType(typeId, weather.getWeatherType().getType()));
 
                 typeStatement.close();
@@ -238,36 +251,38 @@ public class WeatherDaoJdbc implements WeatherDao {
             boolean isCreated = preparedStatementNewWeather.executeUpdate() != 0;
 
             if (!isCreated) {
+                connection.rollback();
                 throw new CreateWeatherException();
             }
 
             ResultSet weatherIdSet = preparedStatementNewWeather.getGeneratedKeys();
-            weather.setId(WeatherMapper.getId(weatherIdSet).orElseThrow(CreateWeatherException::new));
+            weather.setId(WeatherMapper.getId(weatherIdSet).orElseThrow(() -> {
+                try {
+                    connection.rollback();
+                } catch (SQLException e) {
+                    return new RollbackException(e);
+                }
+                return new CreateWeatherException();
+            }));
 
             preparedStatementNewWeather.close();
             connection.commit();
-            connection.setAutoCommit(true);
 
             return cityId;
         } catch (SQLException exception) {
             try {
                 connection.rollback();
             } catch (SQLException e) {
-                throw new CustomSQLException(e);
+                throw new RollbackException(e);
             }
 
-            throw new CustomSQLException(exception);
+            throw new UnknownSQLException(exception);
         }
     }
 
     @Override
     public Long updateByRegionNameAndCreateIfNotExists(Weather temporaryWeather) {
-        Connection connection;
-        try {
-            connection = dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new CustomSQLException(e);
-        }
+        Connection connection = getConnection();
 
         try (connection) {
             PreparedStatement preparedStatementForWeatherId
@@ -283,7 +298,9 @@ public class WeatherDaoJdbc implements WeatherDao {
             preparedStatementForWeatherId.close();
 
             if (weatherId.isEmpty()) {
-                return saveWeatherWithNewRegion(temporaryWeather);
+                Long cityId = saveWeatherWithNewRegion(temporaryWeather);
+                connection.commit();
+                return cityId;
             }
 
             PreparedStatement preparedStatementForNewWeatherType =
@@ -291,7 +308,15 @@ public class WeatherDaoJdbc implements WeatherDao {
             preparedStatementForNewWeatherType.setString(1, temporaryWeather.getWeatherType().getType());
             ResultSet resultSetWeatherType = preparedStatementForNewWeatherType.executeQuery();
 
-            Long typeId = WeatherMapper.getId(resultSetWeatherType).orElseThrow(InvalidWeatherType::new);
+            Long typeId = WeatherMapper.getId(resultSetWeatherType).orElseThrow(() -> {
+                try {
+                    connection.rollback();
+                } catch (SQLException e) {
+                    throw new RollbackException(e);
+                }
+
+                return new InvalidWeatherType();
+            });
             preparedStatementForNewWeatherType.close();
 
             PreparedStatement updateStatement = connection.prepareStatement("UPDATE weather SET type_id = ?, temperature = ? WHERE id = ?");
@@ -301,66 +326,55 @@ public class WeatherDaoJdbc implements WeatherDao {
 
             if (updateStatement.executeUpdate() == 0) {
                 updateStatement.close();
+                connection.rollback();
                 throw new UpdateWeatherException();
             }
 
             updateStatement.close();
             connection.commit();
-            connection.setAutoCommit(true);
 
             return -1L;
         } catch (SQLException exception) {
             try {
                 connection.rollback();
             } catch (SQLException e) {
-                throw new CustomSQLException(e);
+                throw new RollbackException(e);
             }
 
-            throw new CustomSQLException(exception);
+            throw new UnknownSQLException(exception);
         }
     }
 
     @Override
     public Boolean deleteByRegionId(Long regionId) {
-        Connection connection;
-        try {
-            connection = dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new CustomSQLException(e);
-        }
+        Connection connection = getConnection();
 
         try (connection) {
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             connection.setAutoCommit(false);
-
+            Boolean isDeleted = false;
             try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM weather WHERE city_id = ?")) {
                 preparedStatement.setLong(1, regionId);
 
-                connection.commit();
-                connection.setAutoCommit(true);
-                return preparedStatement.executeUpdate() > 0;
+                isDeleted = preparedStatement.executeUpdate() > 0;
             }
 
+            connection.commit();
+            return isDeleted;
         } catch (SQLException exception) {
             try {
                 connection.rollback();
             } catch (SQLException e) {
-                throw new CustomSQLException(e);
+                throw new GetConnectionException(e);
             }
 
-            throw new CustomSQLException(exception);
+            throw new GetConnectionException(exception);
         }
     }
 
     @Override
     public Boolean deleteByRegionName(String regionName) {
-        Connection connection;
-        try {
-            connection = dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new CustomSQLException(e);
-        }
-
+        Connection connection = getConnection();
 
         try (connection) {
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
@@ -372,19 +386,27 @@ public class WeatherDaoJdbc implements WeatherDao {
             Optional<Long> cityId = WeatherMapper.getId(resultSet);
             preparedStatementForRegionId.close();
 
+            boolean result = cityId.isPresent() && deleteByRegionId(cityId.get());
             connection.commit();
-            connection.setAutoCommit(true);
-            return cityId.isPresent() && deleteByRegionId(cityId.get());
+            return result;
         } catch (SQLException exception) {
             try {
                 connection.rollback();
             } catch (SQLException e) {
-                throw new CustomSQLException(e);
+                throw new GetConnectionException(e);
             }
 
-            throw new CustomSQLException(exception);
+            throw new GetConnectionException(exception);
         }
     }
 
+    private Connection getConnection() {
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new GetConnectionException(e);
+        }
+
+    }
 
 }
