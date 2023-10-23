@@ -1,5 +1,7 @@
 server:
   port: 8080
+  host: localhost
+  schema: http
 
 spring:
   datasource:
@@ -35,6 +37,5 @@ resilience4j.ratelimiter:
 weather-dao-realization: jdbc
 api_key: ${API_KEY}
 api_url: "http://api.weatherapi.com/v1"
-host: localhost
-schema: http
+
 
