@@ -6,4 +6,8 @@ public class CreateWeatherException extends CustomException{
     public CreateWeatherException() {
         super(HttpStatus.INTERNAL_SERVER_ERROR, "Can't save the weather");
     }
+
+    public CreateWeatherException(Throwable e) {
+        super(HttpStatus.INTERNAL_SERVER_ERROR, "Can't save the weather", e);
+    }
 }

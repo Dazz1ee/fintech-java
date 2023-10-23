@@ -33,8 +33,8 @@ public record CurrentResponse (
     @JsonProperty("gust_kph") Double gustKph,
     @JsonProperty("air_quality") AirQuality airQuality)
 {
-    private record Condition(String text, String icon, Integer code){}
-    private record AirQuality(Double co,
+    public record Condition(String text, String icon, Integer code){}
+    public record AirQuality(Double co,
                               Double no2,
                               Double o3,
                               Double so2,

@@ -9,6 +9,9 @@ public interface WeatherDao {
     Optional<Weather> findByRegionName(String name, LocalDateTime dateTime);
 
     Long saveWeatherWithNewRegion(Weather weather);
+
+    Long saveWeatherAndType(Weather weather);
+
     Long updateByRegionNameAndCreateIfNotExists(Weather weather);
 
     Boolean deleteByRegionName(String regionName);

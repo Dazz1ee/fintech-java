@@ -2,13 +2,15 @@ package foo.dao;
 
 import foo.models.Weather;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class WeatherDaoImp implements WeatherDao{
-    private final AtomicLong nextId;
+    private final AtomicLong nextWeatherId;
+    private final AtomicLong nextCityId;
+    private final AtomicLong nextTypeId;
     private final List<Weather> weathers;
 
     @Override
@@ -27,11 +29,36 @@ public class WeatherDaoImp implements WeatherDao{
 
     @Override
     public Long saveWeatherWithNewRegion(Weather weather) {
-        weather.getCity().setId(nextId.getAndIncrement());
-        synchronized (weathers) {
-            weathers.add(weather);
+        Optional<Long> typeId = weathers.stream()
+                .filter(weather1 -> weather1.getWeatherType().getType().equals(weather.getWeatherType().getType()))
+                .map(weather1 -> weather1.getWeatherType().getId())
+                .findAny();
+
+        if (typeId.isEmpty()) {
+            weather.getWeatherType().setId(nextTypeId.getAndIncrement());
+        } else {
+            weather.getWeatherType().setId(typeId.get());
         }
+
+        Optional<Long> cityId =  weathers.stream()
+                .filter(weather1 -> weather1.getCity().getName().equals(weather.getCity().getName()))
+                .map(weather1 -> weather1.getCity().getId())
+                .findAny();
+
+        if (cityId.isPresent()) {
+            weather.getCity().setId(cityId.get());
+        } else {
+            weather.getCity().setId(nextCityId.getAndIncrement());
+        }
+
+        weather.setId(nextWeatherId.getAndIncrement());
+        weathers.add(weather);
         return weather.getCity().getId();
+    }
+
+    @Override
+    public Long saveWeatherAndType(Weather weather) {
+        return saveWeatherWithNewRegion(weather);
     }
 
     @Override
@@ -48,7 +75,7 @@ public class WeatherDaoImp implements WeatherDao{
             Long regionId = weathers.stream()
                     .filter(temporary -> temporary.getCity().getName().equals(temporaryWeather.getCity().getName()))
                     .map(element -> element.getCity().getId()).findFirst()
-                    .orElseGet(nextId::getAndIncrement);
+                    .orElseGet(nextWeatherId::getAndIncrement);
 
             temporaryWeather.getCity().setId(regionId);
             weathers.add(temporaryWeather);
@@ -69,7 +96,9 @@ public class WeatherDaoImp implements WeatherDao{
     }
 
     public WeatherDaoImp() {
-        nextId = new AtomicLong(0L);
-        weathers = new ArrayList<>();
+        nextWeatherId = new AtomicLong(0L);
+        nextCityId = new AtomicLong(0L);
+        nextTypeId = new AtomicLong(0L);
+        weathers = new CopyOnWriteArrayList<>();
     }
 }

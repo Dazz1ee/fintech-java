@@ -17,25 +17,18 @@ spring:
     change-log: "classpath:changelog/main-changelog.xml"
   h2:
     console.enabled: true
-springdoc:
-  swagger-ui:
-    path: /ui.html
 
-logging:
-  level:
-    foo: DEBUG
 
 resilience4j.ratelimiter:
   instances:
     weatherApi:
-      limitForPeriod: 1000000
+      limitForPeriod: 10
       limitRefreshPeriod: 31d
       timeoutDuration: 1s
 
 
 # possible options: jdbc, jpa, in-memory
 weather-dao-realization: jdbc
-api_key: ${API_KEY}
+api_key: aaa
 api_url: "http://api.weatherapi.com/v1"
-
 
