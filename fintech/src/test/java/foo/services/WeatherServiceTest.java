@@ -43,17 +43,6 @@ class WeatherServiceTest {
         CustomUriBuilder.setHost("localhost");
     }
 
-    private URI createUri(LocalDateTime dateTime, Long regionId) {
-        return UriComponentsBuilder.newInstance()
-                .scheme("http")
-                .host("localhost")
-                .port(8080)
-                .path("/api/weather/{id}")
-                .queryParam("date", dateTime)
-                .buildAndExpand(regionId)
-                .toUri();
-    }
-
     @Test
     void addNewRegionWithWeatherWithSomeThreads() {
         LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
@@ -69,7 +58,7 @@ class WeatherServiceTest {
 
         URI uri = weatherService.addNewRegionWithWeather("Test", weatherRequest);
 
-        assertThat(createUri(dateTime, regionId)).isEqualTo(uri);
+        assertThat(CustomUriBuilder.getUriWeatherByRegionId(regionId, dateTime)).isEqualTo(uri);
 
     }
 
@@ -134,7 +123,7 @@ class WeatherServiceTest {
                 .temperature(11.1)
                 .build();
 
-        URI uri = createUri(dateTime, 1L);
+        URI uri = CustomUriBuilder.getUriWeatherByRegionId(1L, dateTime);
         when(weatherDao.updateByRegionNameAndCreateIfNotExists(weather)).thenReturn(1L);
 
         Optional<URI> actual = weatherService.updateWeatherByRegion(weather.getCity().getName(),
