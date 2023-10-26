@@ -15,8 +15,6 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
   liquibase:
     change-log: "classpath:changelog/main-changelog.xml"
-  h2:
-    console.enabled: true
 
 
 resilience4j.ratelimiter:
@@ -31,4 +29,3 @@ resilience4j.ratelimiter:
 weather-dao-realization: jdbc
 api_key: aaa
 api_url: "http://api.weatherapi.com/v1"
-

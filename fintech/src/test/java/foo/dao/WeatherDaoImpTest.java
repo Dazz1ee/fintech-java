@@ -7,8 +7,12 @@ import foo.models.WeatherType;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.*;
 import org.springframework.test.context.junit.jupiter.EnabledIf;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -22,10 +26,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnabledIf(expression = "#{'${weather-dao-realization}' != 'in-memory'}", loadContext = true)
 @ActiveProfiles("test")
+@Testcontainers
 class WeatherDaoImpTest {
 
     @Autowired
@@ -34,8 +38,24 @@ class WeatherDaoImpTest {
     @Autowired
     DataSource dataSource;
 
-    @BeforeEach()
-    public  void deleteWeathers() throws SQLException {
+    @Container
+    public static GenericContainer<?> h2Container =
+            new GenericContainer<>(DockerImageName.parse("oscarfonts/h2"))
+                    .withExposedPorts(1521).withEnv("H2_OPTIONS", "-ifNotExists");
+
+    static {
+        h2Container.start();
+    }
+
+    @DynamicPropertySource
+    static void setPropertySource(DynamicPropertyRegistry dynamicPropertySource) {
+        dynamicPropertySource.add("spring.datasource.url",
+                () -> String.format("jdbc:h2:tcp://%s:%d/test", h2Container.getHost(), h2Container.getMappedPort(1521)));
+    }
+
+
+    @BeforeEach
+    public  void deleteWeathers() throws SQLException{
         Connection connection = dataSource.getConnection();
         connection.prepareStatement("TRUNCATE TABLE weather").execute();
         connection.close();
@@ -43,7 +63,6 @@ class WeatherDaoImpTest {
 
 
     @Test
-    @Order(1)
     void saveNewRegionWithWeatherWithSomeThreads() throws SQLException {
         LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         List<Weather> weatherRequests = List.of(
@@ -105,8 +124,7 @@ class WeatherDaoImpTest {
     }
 
     @Test
-    @Order(1)
-    void FailedSaveNewRegion() throws SQLException {
+    void FailedSaveNewRegion() {
         LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         Weather weatherRequests =
                 Weather.builder()
@@ -116,16 +134,12 @@ class WeatherDaoImpTest {
                         .date(dateTime)
                         .build();
 
-
-        List<Thread> threads = new ArrayList<>();
-
         assertThrows(InvalidWeatherType.class, () -> weatherDao.saveWeatherWithNewRegion(weatherRequests));
 
     }
 
 
     @Test
-    @Order(123)
     void saveWeatherAndType() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
@@ -205,7 +219,6 @@ class WeatherDaoImpTest {
     }
 
     @Test
-    @Order(2)
     void findWeatherWhenNotExists() {
         Optional<Weather> actual = weatherDao.findByRegionId(333L, LocalDateTime.now());
 
@@ -213,7 +226,6 @@ class WeatherDaoImpTest {
     }
 
     @Test
-    @Order(3)
     void findWeatherByRegionWhenExists() {
         LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         Long id = weatherDao.saveWeatherWithNewRegion(Weather.builder()
@@ -230,7 +242,6 @@ class WeatherDaoImpTest {
     }
 
     @Test
-    @Order(4)
     void findWeatherWhenExistsButHasAnotherDateTime() {
         LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         Long id = weatherDao.saveWeatherWithNewRegion(Weather.builder()
@@ -246,7 +257,6 @@ class WeatherDaoImpTest {
 
 
     @Test
-    @Order(5)
     void updateWeatherByRegionWhenExists() {
         LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         Weather weather = Weather.builder()
@@ -276,7 +286,6 @@ class WeatherDaoImpTest {
     }
 
     @Test
-    @Order(6)
     void updateWeatherByRegionWhenRegionNotExists() {
         LocalDateTime dateTime = LocalDateTime.now();
         Weather willBeCreated = Weather.builder()
@@ -293,7 +302,6 @@ class WeatherDaoImpTest {
     }
 
     @Test
-    @Order(7)
     void updateWeatherByRegionWhenDateNotExists() {
         LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
 
@@ -318,7 +326,6 @@ class WeatherDaoImpTest {
     }
 
     @Test
-    @Order(8)
     void deleteByRegionName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
@@ -353,7 +360,6 @@ class WeatherDaoImpTest {
     }
 
     @Test
-    @Order(9)
     void deleteByRegionId() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
