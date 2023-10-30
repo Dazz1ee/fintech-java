@@ -7,8 +7,8 @@ import foo.models.Weather;
 import foo.models.WeatherApiResponse;
 import foo.models.WeatherType;
 import foo.other.CustomUriBuilder;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -16,12 +16,17 @@ import java.net.URI;
 
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class WeatherApiService {
     private final ClientWeather clientWeather;
     private final WeatherDao weatherDao;
+    private final CustomUriBuilder uriBuilder;
 
+    public WeatherApiService(ClientWeather clientWeather, WeatherDao weatherDao, @Qualifier("uriBuilderForWeatherApi") CustomUriBuilder uriBuilder) {
+        this.clientWeather = clientWeather;
+        this.weatherDao = weatherDao;
+        this.uriBuilder = uriBuilder;
+    }
 
     public ResponseEntity<WeatherApiResponse> getCurrentWeatherByRegion(String regionName) {
         return clientWeather.getCurrentWeatherByRegion(regionName);
@@ -41,7 +46,7 @@ public class WeatherApiService {
                 .build();
 
         Long id = weatherDao.saveWeatherAndType(weather);
-        return CustomUriBuilder.getUriWeatherByRegionId(id , weather.getDate());
+        return uriBuilder.getUri(id , weather.getDate());
     }
 
 }

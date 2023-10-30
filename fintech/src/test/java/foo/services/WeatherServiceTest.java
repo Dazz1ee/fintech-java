@@ -7,16 +7,16 @@ import foo.models.Weather;
 import foo.models.WeatherRequest;
 import foo.models.WeatherType;
 import foo.other.CustomUriBuilder;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
+
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -28,20 +28,21 @@ import static org.mockito.Mockito.when;
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ExtendWith(SpringExtension.class)
+@SpringBootTest(classes = {UriBuilderConfig.class, WeatherService.class})
+@EnableConfigurationProperties(value = UriBuilderConfig.class)
+@ActiveProfiles("test")
 class WeatherServiceTest {
 
-    @InjectMocks
+    @Autowired
     WeatherService weatherService;
-    @Mock
+
+    @MockBean
     WeatherDao weatherDao;
 
-    @BeforeAll
-    public void setUriBuilder(){
-        CustomUriBuilder.setScheme("http");
-        CustomUriBuilder.setPort(8080);
-        CustomUriBuilder.setHost("localhost");
-    }
+    @Autowired
+    @Qualifier("uriBuilderForWeatherApi")
+    CustomUriBuilder customUriBuilder;
+
 
     @Test
     void addNewRegionWithWeatherWithSomeThreads() {
@@ -58,7 +59,7 @@ class WeatherServiceTest {
 
         URI uri = weatherService.addNewRegionWithWeather("Test", weatherRequest);
 
-        assertThat(CustomUriBuilder.getUriWeatherByRegionId(regionId, dateTime)).isEqualTo(uri);
+        assertThat(customUriBuilder.getUri(regionId, dateTime)).isEqualTo(uri);
 
     }
 
@@ -123,7 +124,7 @@ class WeatherServiceTest {
                 .temperature(11.1)
                 .build();
 
-        URI uri = CustomUriBuilder.getUriWeatherByRegionId(1L, dateTime);
+        URI uri = customUriBuilder.getUri(1L, dateTime);
         when(weatherDao.updateByRegionNameAndCreateIfNotExists(weather)).thenReturn(1L);
 
         Optional<URI> actual = weatherService.updateWeatherByRegion(weather.getCity().getName(),
