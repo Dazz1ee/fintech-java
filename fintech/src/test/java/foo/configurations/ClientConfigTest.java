@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -39,23 +38,17 @@ class ClientConfigTest {
     private RestTemplate restTemplate;
 
     private MockRestServiceServer mockServer;
-    private ObjectMapper mapper;
 
-    @BeforeAll
-    public void init() {
-        mapper = new ObjectMapper();
-    }
+    @Autowired
+    private ObjectMapper mapper;
 
     @BeforeEach
     public void initServer() {
         mockServer = MockRestServiceServer.createServer(restTemplate);
     }
 
-
     @Value("${api_url}")
     private String url;
-
-
 
     @Test
     void checkRestTemplateInterceptors() throws JsonProcessingException, URISyntaxException {

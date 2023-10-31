@@ -6,17 +6,23 @@ import foo.models.Weather;
 import foo.models.WeatherRequest;
 import foo.models.WeatherType;
 import foo.other.CustomUriBuilder;
-import lombok.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
-@Value
 public class WeatherService {
 
-    WeatherDao weatherDao;
+    private final WeatherDao weatherDao;
+
+    private final CustomUriBuilder customUriBuilder;
+
+    public WeatherService(WeatherDao weatherDao, @Qualifier("uriBuilderForWeatherApi") CustomUriBuilder customUriBuilder) {
+        this.weatherDao = weatherDao;
+        this.customUriBuilder = customUriBuilder;
+    }
 
     public Optional<Double> findWeatherByRegion(Long regionId, LocalDateTime dateTime) {
         return weatherDao.findByRegionId(regionId, dateTime).map(Weather::getTemperature);
@@ -35,7 +41,7 @@ public class WeatherService {
                 .temperature(weatherWithNewRegion.temperature())
                 .build();
 
-        return CustomUriBuilder.getUriWeatherByRegionId(
+        return customUriBuilder.getUri(
                 weatherDao.saveWeatherWithNewRegion(weather),
                 weatherWithNewRegion.dateTime());
     }
@@ -53,7 +59,7 @@ public class WeatherService {
         if(regionId == -1) {
             return Optional.empty();
         }
-        return Optional.of(CustomUriBuilder.getUriWeatherByRegionId(regionId, weather.getDate()));
+        return Optional.of(customUriBuilder.getUri(regionId, weather.getDate()));
     }
 
     public  void removeWeathersByRegionId(Long regionId) {

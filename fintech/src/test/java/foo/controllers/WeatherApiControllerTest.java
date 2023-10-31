@@ -8,6 +8,7 @@ import foo.other.CustomUriBuilder;
 import foo.services.WeatherApiService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -35,6 +36,10 @@ class WeatherApiControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    @Qualifier("uriBuilderForWeatherApi")
+    private CustomUriBuilder customUriBuilder;
+
     @Test
     void getWeatherWhenOk() throws Exception {
         when(weatherApiService.getCurrentWeatherByRegion("Test")).thenReturn(ResponseEntity.ok().build());
@@ -50,7 +55,7 @@ class WeatherApiControllerTest {
 
     @Test
     void saveWeather() throws Exception {
-        URI uri = CustomUriBuilder.getUriWeatherByRegionId(1L, LocalDateTime.now());
+        URI uri = customUriBuilder.getUri(1L, LocalDateTime.now());
         when(weatherApiService.saveWeather("Test"))
                 .thenReturn(uri);
         mockMvc.perform(post(new URI("/remote/api/weather")).content(objectMapper.writeValueAsString(new CityNameRequest("Test"))).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated()).andExpect(header().string("Location", uri.toString()));

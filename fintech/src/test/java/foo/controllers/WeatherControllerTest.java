@@ -1,19 +1,22 @@
 package foo.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import foo.configurations.UriBuilderConfig;
 import foo.models.*;
+import foo.other.CustomUriBuilder;
 import foo.services.WeatherService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -29,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WebMvcTest(controllers = {WeatherController.class})
 @ActiveProfiles("test")
+@Import(UriBuilderConfig.class)
 class WeatherControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
@@ -39,16 +43,10 @@ class WeatherControllerTest {
     @MockBean
     private WeatherService weatherService;
 
-    public URI createUri(LocalDateTime dateTime, Long regionId) {
-        return UriComponentsBuilder.newInstance()
-                .scheme("http")
-                .host("localhost")
-                .port(8080)
-                .path("/api/weather/{id}")
-                .queryParam("date", dateTime)
-                .buildAndExpand(regionId)
-                .toUri();
-    }
+    @Qualifier("uriBuilderForWeatherApi")
+    @Autowired
+    private CustomUriBuilder customUriBuilder;
+
 
     @Test
     void getTemperatureByRegionIdThenNotFound() throws Exception {
@@ -89,7 +87,7 @@ class WeatherControllerTest {
         Long regionId = 1L;
 
         WeatherRequest weatherRequest = new WeatherRequest(23.1, "sunshine", dateTime);
-        URI expected = createUri(dateTime, regionId);
+        URI expected = customUriBuilder.getUri(regionId, dateTime);
         when(weatherService.addNewRegionWithWeather(regionName, weatherRequest)).thenReturn(expected);
 
         MvcResult result = mockMvc.perform(
@@ -122,7 +120,7 @@ class WeatherControllerTest {
         LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         String regionName = "Test";
         WeatherRequest weatherRequest = new WeatherRequest(23.1, "sunshine", dateTime);
-        URI expected = createUri(dateTime, 0L);
+        URI expected = customUriBuilder.getUri(0L, dateTime);
         when(weatherService.updateWeatherByRegion(regionName, weatherRequest)).thenReturn(Optional.of(expected));
 
         MvcResult result = mockMvc.perform(

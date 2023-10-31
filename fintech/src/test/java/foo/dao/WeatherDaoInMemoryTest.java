@@ -12,18 +12,16 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class WeatherDaoInMemoryTest {
 
     WeatherDao weatherDao;
 
-    @BeforeAll
+    @BeforeEach
     public void init() {
         weatherDao = new WeatherDaoImp();
     }
 
     @Test
-    @Order(1)
     void saveNewRegionWithWeatherWithSomeThreads() {
         LocalDateTime dateTime = LocalDateTime.now();
         List<Weather> weatherRequests = List.of(
@@ -70,7 +68,6 @@ class WeatherDaoInMemoryTest {
     }
 
     @Test
-    @Order(2)
     void findWeatherWhenNotExists() {
         Optional<Weather> actual = weatherDao.findByRegionId(333L, LocalDateTime.now());
 
@@ -78,7 +75,6 @@ class WeatherDaoInMemoryTest {
     }
 
     @Test
-    @Order(3)
     void findWeatherByRegionWhenExists() {
         LocalDateTime dateTime = LocalDateTime.now();
         Long id = weatherDao.saveWeatherWithNewRegion(Weather.builder()
@@ -95,7 +91,6 @@ class WeatherDaoInMemoryTest {
     }
 
     @Test
-    @Order(4)
     void findWeatherWhenExistsButHasAnotherDateTime() {
         LocalDateTime dateTime = LocalDateTime.now();
         Long id = weatherDao.saveWeatherWithNewRegion(Weather.builder()
@@ -111,7 +106,6 @@ class WeatherDaoInMemoryTest {
 
 
     @Test
-    @Order(5)
     void updateWeatherByRegionWhenExists() {
         LocalDateTime dateTime = LocalDateTime.now();
         Weather weather = Weather.builder()
@@ -141,7 +135,6 @@ class WeatherDaoInMemoryTest {
     }
 
     @Test
-    @Order(6)
     void updateWeatherByRegionWhenRegionNotExists() {
         LocalDateTime dateTime = LocalDateTime.now();
         Weather willBeCreated = Weather.builder()
@@ -159,7 +152,6 @@ class WeatherDaoInMemoryTest {
     }
 
     @Test
-    @Order(7)
     void updateWeatherByRegionWhenDateNotExists() {
         LocalDateTime dateTime = LocalDateTime.now();
         Weather weather = Weather.builder()
@@ -183,7 +175,6 @@ class WeatherDaoInMemoryTest {
     }
 
     @Test
-    @Order(8)
     void deleteByRegionName() {
         LocalDateTime dateTime = LocalDateTime.now();
         String regionName = "Will be created";
@@ -211,7 +202,6 @@ class WeatherDaoInMemoryTest {
     }
 
     @Test
-    @Order(9)
     void deleteByRegionId() {
         LocalDateTime dateTime = LocalDateTime.now();
         String regionName = "Will be created";
