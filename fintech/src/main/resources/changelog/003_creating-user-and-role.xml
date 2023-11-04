@@ -8,10 +8,10 @@
     <changeSet id="creating-role" author="katin">
         <preConditions onFail="MARK_RAN">
             <not>
-                <tableExists tableName="role" />
+                <tableExists tableName="roles" />
             </not>
         </preConditions>
-        <createTable tableName="role">
+        <createTable tableName="roles">
             <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -24,31 +24,32 @@
     <changeSet id="creating-user" author="katin">
         <preConditions onFail="MARK_RAN">
             <not>
-                <tableExists tableName="user_" />
+                <tableExists tableName="users" />
             </not>
         </preConditions>
-        <createTable tableName="user_">
+        <createTable tableName="users">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="username" type="varchar(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="login" type="varchar(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
             <column name="password" type="varchar(64)">
                 <constraints nullable="false"/>
             </column>
             <column name="role_id" type="int">
-                <constraints references="role(id)" foreignKeyName="fk_role_user" nullable="false" deleteCascade="true"/>
+                <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <addForeignKeyConstraint baseColumnNames = "role_id" baseTableName="users"
+                                 constraintName="fk_role_user"  referencedColumnNames="id"
+                                 referencedTableName="roles" onDelete="RESTRICT"/>
     </changeSet>
 
     <changeSet id="create-indexes-2" author="katin">
-        <createIndex tableName="user_" indexName="index_user_login">
-            <column name="login"/>
+        <createIndex tableName="users" indexName="index_user_login">
+            <column name="username"/>
         </createIndex>
     </changeSet>
 

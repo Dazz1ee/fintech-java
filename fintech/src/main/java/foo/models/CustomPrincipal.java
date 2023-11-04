@@ -14,8 +14,6 @@ import java.util.List;
 public class CustomPrincipal implements UserDetails {
     private Long id;
 
-    private String login;
-
     private String password;
 
     private String username;
@@ -24,7 +22,6 @@ public class CustomPrincipal implements UserDetails {
 
     public CustomPrincipal(CustomUser customUser) {
         this.id = customUser.getId();
-        this.login = customUser.getLogin();
         this.username = customUser.getUsername();
         this.role = customUser.getRole();
         this.password = customUser.getPassword();

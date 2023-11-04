@@ -6,6 +6,7 @@ import foo.models.CustomUser;
 import foo.models.Role;
 import foo.repositories.RoleRepository;
 import foo.repositories.UserRepository;
+import jakarta.validation.ConstraintDeclarationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,22 +20,23 @@ public class UserDaoJpa implements UserDao{
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Optional<CustomUser> findByLogin(String login) {
-        return userRepository.findByLogin(login);
+    public Optional<CustomUser> findByUsername(String login) {
+        return userRepository.findByUsername(login);
     }
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public Long save(CustomUser customUser) {
-        Optional<CustomUser> savedUser = userRepository.findByLogin(customUser.getLogin());
-        if (savedUser.isPresent()) {
-            throw new CreateUserException();
-        }
-
         Role role = roleRepository.findByName(customUser.getRole().getName()).orElseThrow(IncorrectRoleException::new);
         customUser.setRole(role);
 
-        userRepository.save(customUser);
+        try {
+            userRepository.save(customUser);
+        } catch (ConstraintDeclarationException exception) {
+            throw new CreateUserException(exception);
+        } catch (Exception exception) {
+            throw new CreateUserException("Unknown execption", exception);
+        }
 
         return customUser.getId();
     }

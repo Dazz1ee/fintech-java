@@ -1,6 +1,7 @@
 package foo.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import foo.configurations.CsrfConfiguration;
 import foo.configurations.SecurityConfig;
 import foo.configurations.UriBuilderConfig;
 import foo.exceptions.TooManyLocationsException;
@@ -28,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.mockito.Mockito.when;
 
 @WebMvcTest(controllers = {WeatherApiController.class})
-@Import({SecurityConfig.class, ObjectMapper.class, UriBuilderConfig.class})
+@Import({SecurityConfig.class, ObjectMapper.class, UriBuilderConfig.class, CsrfConfiguration.class})
 @ActiveProfiles("test")
 class WeatherApiControllerTest {
 

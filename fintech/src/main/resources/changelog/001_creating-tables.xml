@@ -8,10 +8,10 @@
     <changeSet id="creating-city" author="katin">
         <preConditions onFail="MARK_RAN">
             <not>
-                <tableExists tableName="city" />
+                <tableExists tableName="cities" />
             </not>
         </preConditions>
-        <createTable tableName="city">
+        <createTable tableName="cities">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -24,10 +24,10 @@
     <changeSet id="creating-weather-type" author="katin">
         <preConditions onFail="MARK_RAN">
             <not>
-                <tableExists tableName="weather_type" />
+                <tableExists tableName="weather_types" />
             </not>
         </preConditions>
-        <createTable tableName="weather_type">
+        <createTable tableName="weather_types">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -40,19 +40,17 @@
     <changeSet id="creating-weather" author="katin">
         <preConditions onFail="MARK_RAN">
             <not>
-                <tableExists tableName="weather" />
+                <tableExists tableName="weathers" />
             </not>
         </preConditions>
-        <createTable tableName="weather">
+        <createTable tableName="weathers">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="city_id" type="bigint">
-                <constraints references="city(id)" foreignKeyName="fk_city_weather" nullable="false" deleteCascade="true"/>
+                <constraints nullable="false"/>
             </column>
-            <column name="type_id" type="bigint">
-                <constraints references="weather_type(id)" foreignKeyName="fk_type_weather"/>
-            </column>
+            <column name="type_id" type="bigint"/>
             <column name="temperature" type="double precision">
                 <constraints nullable="false"/>
             </column>
@@ -60,17 +58,25 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <addForeignKeyConstraint baseColumnNames = "city_id" baseTableName="weathers"
+                                 constraintName="fk_city_weather"  referencedColumnNames="id"
+                                 referencedTableName="cities" onDelete="RESTRICT"/>
+
+        <addForeignKeyConstraint baseColumnNames = "type_id" baseTableName="weathers"
+                                 constraintName="fk_type_weather"  referencedColumnNames="id"
+                                 referencedTableName="weather_types" onDelete="RESTRICT"/>
     </changeSet>
 
     <changeSet id="create-indexes" author="katin">
-        <createIndex tableName="weather" indexName="index_weather_type">
+        <createIndex tableName="weathers" indexName="index_weather_type">
             <column name="type_id"/>
         </createIndex>
-        <createIndex tableName="weather" indexName="index_city_date">
+        <createIndex tableName="weathers" indexName="index_city_date">
             <column name="city_id"/>
             <column name="date_time"/>
         </createIndex>
-        <createIndex tableName="city" indexName="index_city_name">
+        <createIndex tableName="cities" indexName="index_city_name">
             <column name="name"/>
         </createIndex>
     </changeSet>

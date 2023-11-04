@@ -57,7 +57,7 @@ class WeatherDaoImpTest {
     @BeforeEach
     public  void deleteWeathers() throws SQLException{
         Connection connection = dataSource.getConnection();
-        connection.prepareStatement("TRUNCATE TABLE weather").execute();
+        connection.prepareStatement("TRUNCATE TABLE weathers").execute();
         connection.close();
     }
 
@@ -105,18 +105,18 @@ class WeatherDaoImpTest {
         }
 
         Connection connection = dataSource.getConnection();
-        String sql = "SELECT * FROM weather JOIN city ON weather.city_id = city.id JOIN weather_type ON weather.type_id = weather_type.id";
+        String sql = "SELECT * FROM weathers JOIN cities ON weathers.city_id = cities.id JOIN weather_types ON weathers.type_id = weather_types.id";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         ResultSet resultSet = preparedStatement.executeQuery();
         int i = 0;
 
         while (resultSet.next()) {
             i++;
-            Weather actualWeather = new Weather(resultSet.getLong("weather.id"),
-                    new City(resultSet.getLong("city.id"), resultSet.getString("city.name")),
-                    new WeatherType(resultSet.getLong("weather_type.id"), resultSet.getString("weather_type.type")),
-                    resultSet.getDouble("weather.temperature"),
-                    resultSet.getObject("weather.date_time", LocalDateTime.class));
+            Weather actualWeather = new Weather(resultSet.getLong("weathers.id"),
+                    new City(resultSet.getLong("cities.id"), resultSet.getString("cities.name")),
+                    new WeatherType(resultSet.getLong("weather_types.id"), resultSet.getString("weather_types.type")),
+                    resultSet.getDouble("weathers.temperature"),
+                    resultSet.getObject("weathers.date_time", LocalDateTime.class));
             assertThat(weatherRequests).contains(actualWeather);
         }
 
@@ -164,7 +164,7 @@ class WeatherDaoImpTest {
                             .build()
             );
 
-            String foundType = "SELECT id FROM weather_type WHERE type = ?";
+            String foundType = "SELECT id FROM weather_types WHERE type = ?";
             PreparedStatement notFoundTypeStatement = connection.prepareStatement(foundType);
             notFoundTypeStatement.setString(1, "test");
             ResultSet resultNotFound = notFoundTypeStatement.executeQuery();
@@ -190,18 +190,18 @@ class WeatherDaoImpTest {
                 }
             }
 
-            String sql = "SELECT * FROM weather JOIN city ON weather.city_id = city.id JOIN weather_type ON weather.type_id = weather_type.id";
+            String sql = "SELECT * FROM weathers JOIN cities ON weathers.city_id = cities.id JOIN weather_types ON weathers.type_id = weather_types.id";
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             ResultSet resultSet = preparedStatement.executeQuery();
             int i = 0;
 
             while (resultSet.next()) {
                 i++;
-                Weather actualWeather = new Weather(resultSet.getLong("weather.id"),
-                        new City(resultSet.getLong("city.id"), resultSet.getString("city.name")),
-                        new WeatherType(resultSet.getLong("weather_type.id"), resultSet.getString("weather_type.type")),
-                        resultSet.getDouble("weather.temperature"),
-                        resultSet.getObject("weather.date_time", LocalDateTime.class));
+                Weather actualWeather = new Weather(resultSet.getLong("weathers.id"),
+                        new City(resultSet.getLong("cities.id"), resultSet.getString("cities.name")),
+                        new WeatherType(resultSet.getLong("weather_types.id"), resultSet.getString("weather_types.type")),
+                        resultSet.getDouble("weathers.temperature"),
+                        resultSet.getObject("weathers.date_time", LocalDateTime.class));
                 assertThat(weatherRequests).contains(actualWeather);
             }
 
@@ -344,12 +344,12 @@ class WeatherDaoImpTest {
                     .date(dateTime.plusMinutes(1))
                     .temperature(13.2)
                     .build();
-            Long cityId = weatherDao.saveWeatherWithNewRegion(weather1);
+            Long citiesId = weatherDao.saveWeatherWithNewRegion(weather1);
             weatherDao.saveWeatherWithNewRegion(weather2);
 
             weatherDao.deleteByRegionName(weather1.getCity().getName());
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(id) FROM weather WHERE city_id = ?");
-            preparedStatement.setLong(1, cityId);
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(id) FROM weathers WHERE city_id = ?");
+            preparedStatement.setLong(1, citiesId);
 
             ResultSet resultSet = preparedStatement.executeQuery();
             resultSet.next();
@@ -375,7 +375,7 @@ class WeatherDaoImpTest {
             Long regionId = weatherDao.saveWeatherWithNewRegion(weather1);
 
             weatherDao.deleteByRegionId(regionId);
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(id) FROM weather WHERE city_id = ?");
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(id) FROM weathers WHERE city_id = ?");
             preparedStatement.setLong(1, regionId);
 
             ResultSet resultSet = preparedStatement.executeQuery();

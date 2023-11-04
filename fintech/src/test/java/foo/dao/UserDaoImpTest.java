@@ -56,7 +56,7 @@ class UserDaoImpTest {
     @BeforeEach
     public  void deleteWeathers() throws SQLException{
         Connection connection = dataSource.getConnection();
-        connection.prepareStatement("TRUNCATE TABLE user_").execute();
+        connection.prepareStatement("TRUNCATE TABLE users").execute();
         connection.close();
     }
 
@@ -64,7 +64,6 @@ class UserDaoImpTest {
     @Test
     void saveNewUser() throws SQLException {
         CustomUser customUser = CustomUser.builder()
-                .login("test")
                 .username("test")
                 .role(new Role("ROLE_USER"))
                 .password("test")
@@ -73,17 +72,16 @@ class UserDaoImpTest {
         userDao.save(customUser);
 
         Connection connection = dataSource.getConnection();
-        String sql = "SELECT user_.id, user_.username, user_.login, user_.password, role.id, role.name " +
-                "FROM user_ JOIN role ON user_.role_id = role.id WHERE user_.login='test'";
+        String sql = "SELECT users.id, users.username, users.password, roles.id, roles.name " +
+                "FROM users JOIN roles ON users.role_id = roles.id WHERE users.username='test'";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         ResultSet resultSet = preparedStatement.executeQuery();
         assertThat(resultSet.next()).isTrue();
 
-        CustomUser actual = new CustomUser(resultSet.getLong("user_.id"),
-            resultSet.getString("user_.login"),
-            resultSet.getString("user_.username"),
-            resultSet.getString("user_.password"),
-            new Role(resultSet.getInt("role.id"), resultSet.getString("role.name")));
+        CustomUser actual = new CustomUser(resultSet.getLong("users.id"),
+            resultSet.getString("users.username"),
+            resultSet.getString("users.password"),
+            new Role(resultSet.getInt("roles.id"), resultSet.getString("roles.name")));
 
         assertThat(actual).isEqualTo(customUser);
 
@@ -92,14 +90,12 @@ class UserDaoImpTest {
     @Test
     void FailedSaveNewRegion() {
         CustomUser customUser1 = CustomUser.builder()
-                .login("test")
                 .username("test")
                 .role(new Role("ROLE_USER"))
                 .password("test")
                 .build();
 
         CustomUser customUser2 = CustomUser.builder()
-                .login("test")
                 .username("test")
                 .role(new Role("ROLE_USER"))
                 .password("test")
@@ -112,7 +108,7 @@ class UserDaoImpTest {
 
     @Test
     void findWeatherWhenNotExists() {
-        Optional<CustomUser> actual = userDao.findByLogin("test");
+        Optional<CustomUser> actual = userDao.findByUsername("test");
 
         assertThat(actual).isEmpty();
     }
@@ -120,7 +116,6 @@ class UserDaoImpTest {
     @Test
     void findWeatherByRegionWhenExists() {
         CustomUser customUser = CustomUser.builder()
-                .login("test")
                 .username("test")
                 .role(new Role("ROLE_USER"))
                 .password("test")
@@ -128,11 +123,10 @@ class UserDaoImpTest {
 
         userDao.save(customUser);
 
-        Optional<CustomUser> actual = userDao.findByLogin("test");
+        Optional<CustomUser> actual = userDao.findByUsername("test");
 
         assertThat(actual).isPresent();
         assertThat(actual.get().getUsername()).isEqualTo("test");
-        assertThat(actual.get().getLogin()).isEqualTo("test");
         assertThat(actual.get().getRole().getName()).isEqualTo("ROLE_USER");
     }
 

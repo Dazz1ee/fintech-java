@@ -16,18 +16,18 @@ public class UserDaoJdbc implements UserDao {
     private final DataSource dataSource;
 
     @Override
-    public Optional<CustomUser> findByLogin(String login) {
+    public Optional<CustomUser> findByUsername(String username) {
         Connection connection = getConnection();
         try (connection) {
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             connection.setAutoCommit(false);
 
             String sql =
-                    "SELECT user_.id, user_.username, user_.login, user_.password, role.id, role.name " +
-                            "FROM user_ JOIN role ON user_.role_id = role.id WHERE user_.login=?";
+                    "SELECT users.id, users.username, users.password, roles.id, roles.name " +
+                            "FROM users JOIN roles ON users.role_id = roles.id WHERE users.username=?";
 
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setString(1, login);
+            preparedStatement.setString(1, username);
 
             ResultSet resultSet = preparedStatement.executeQuery();
             UserMapper userMapper = new UserMapper();
@@ -50,13 +50,13 @@ public class UserDaoJdbc implements UserDao {
             connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
             connection.setAutoCommit(false);
 
-            String sqlSelectRole = "SELECT id, name FROM role WHERE name = ?";
+            String sqlSelectRole = "SELECT id, name FROM roles WHERE name = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectRole);
             preparedStatement.setString(1, customUser.getRole().getName());
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            RoleMapper roleMapper = new RoleMapper();
-            customUser.setRole(roleMapper.getRole(resultSet).orElseThrow(() -> {
+            RoleMapper rolesMapper = new RoleMapper();
+            customUser.setRole(rolesMapper.getRole(resultSet).orElseThrow(() -> {
                 try {
                     preparedStatement.close();
                     connection.rollback();
@@ -69,12 +69,11 @@ public class UserDaoJdbc implements UserDao {
 
             preparedStatement.close();
 
-            String sqlSave = "INSERT INTO user_(username, login, password, role_id) VALUES (?, ?, ?, ?)";
+            String sqlSave = "INSERT INTO users(username, password, role_id) VALUES (?, ?, ?)";
             PreparedStatement userStatement = connection.prepareStatement(sqlSave, Statement.RETURN_GENERATED_KEYS);
             userStatement.setString(1, customUser.getUsername());
-            userStatement.setString(2, customUser.getLogin());
-            userStatement.setString(3, customUser.getPassword());
-            userStatement.setInt(4, customUser.getRole().getId());
+            userStatement.setString(2, customUser.getPassword());
+            userStatement.setInt(3, customUser.getRole().getId());
 
             try {
                 userStatement.executeUpdate();

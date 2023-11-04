@@ -5,6 +5,6 @@ import foo.models.CustomUser;
 import java.util.Optional;
 
 public interface UserDao {
-    Optional<CustomUser> findByLogin(String login);
+    Optional<CustomUser> findByUsername(String login);
     Long save(CustomUser customUser);
 }

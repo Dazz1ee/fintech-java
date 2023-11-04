@@ -1,6 +1,7 @@
 package foo.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import foo.configurations.CsrfConfiguration;
 import foo.configurations.SecurityConfig;
 import foo.configurations.UriBuilderConfig;
 import foo.models.*;
@@ -35,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WebMvcTest(controllers = {WeatherController.class})
 @ActiveProfiles("test")
-@Import({UriBuilderConfig.class, SecurityConfig.class})
+@Import({UriBuilderConfig.class, SecurityConfig.class, CsrfConfiguration.class})
 class WeatherControllerTest {
     @Autowired
     private ObjectMapper objectMapper;

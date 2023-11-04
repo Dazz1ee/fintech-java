@@ -12,11 +12,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.nio.CharBuffer;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IdentificationServiceTest {
@@ -31,8 +32,8 @@ class IdentificationServiceTest {
 
     @Test
     void signUp() {
-        UserDto userDto = new UserDto("test", "test", "test");
-        when(passwordEncoder.encode("test")).thenReturn("hash");
+        UserDto userDto = new UserDto("test", "test".toCharArray());
+        when(passwordEncoder.encode(CharBuffer.wrap("test"))).thenReturn("hash");
         ArgumentCaptor<CustomUser> captor = ArgumentCaptor.forClass(CustomUser.class);
 
         identificationService.signUp(userDto);
@@ -40,7 +41,6 @@ class IdentificationServiceTest {
 
         CustomUser customUser = captor.getValue();
 
-        assertThat(customUser.getLogin()).isEqualTo("test");
         assertThat(customUser.getUsername()).isEqualTo("test");
         assertThat(customUser.getPassword()).isEqualTo("hash");
         assertThat(customUser.getRole().getName()).isEqualTo("ROLE_USER");
@@ -48,7 +48,7 @@ class IdentificationServiceTest {
 
     @Test
     void failedSignUp() {
-        UserDto userDto = new UserDto("test", "test", "test");
+        UserDto userDto = new UserDto("test", "test".toCharArray());
         when(userDao.save(any())).thenThrow(CreateUserException.class);
         assertThrows(CreateUserException.class, () -> identificationService.signUp(userDto));
     }

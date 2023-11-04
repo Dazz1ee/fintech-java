@@ -18,7 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return new CustomPrincipal(
                 userDao
-                        .findByLogin(username)
+                        .findByUsername(username)
                         .orElseThrow(() -> new UserNotFoundException("Incorrect login or password"))
         );
     }

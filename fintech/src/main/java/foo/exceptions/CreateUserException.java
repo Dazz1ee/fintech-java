@@ -15,4 +15,8 @@ public class CreateUserException extends CustomException {
         super(HttpStatus.INTERNAL_SERVER_ERROR, message);
     }
 
+    public CreateUserException(String message, Throwable exception) {
+        super(HttpStatus.INTERNAL_SERVER_ERROR, message, exception);
+    }
+
 }

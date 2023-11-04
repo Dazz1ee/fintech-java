@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Max;
 import lombok.*;
 
 @Entity
-@Table(name = "user_")
+@Table(name = "users")
 @Data
 @Builder
 @NoArgsConstructor
@@ -17,10 +17,8 @@ public class CustomUser {
     private Long id;
 
     @Max(255)
+    @Column(unique = true)
     private String username;
-
-    @Max(255)
-    private String login;
 
     @Max(64)
     private String password;
