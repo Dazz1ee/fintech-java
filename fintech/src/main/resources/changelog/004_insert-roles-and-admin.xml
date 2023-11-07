@@ -5,8 +5,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <include file="/changelog/001_creating-tables.xml"/>
-    <include file="/changelog/002_insert-data.xml"/>
-    <include file="/changelog/003_creating-user-and-role.xml"/>
-    <include file="/changelog/004_insert-roles-and-admin.xml"/>
+    <changeSet id="inserting_2" author="katin">
+        <sqlFile path="changelog/inserting_admin_and_role.sql" />
+    </changeSet>
+
 </databaseChangeLog>

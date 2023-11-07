@@ -26,6 +26,6 @@ resilience4j.ratelimiter:
 
 
 # possible options: jdbc, jpa, in-memory
-weather-dao-realization: jdbc
+weather-dao-realization: jpa
 api_key: aaa
 api_url: "http://api.weatherapi.com/v1"

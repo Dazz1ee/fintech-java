@@ -2,6 +2,8 @@ package foo.configurations;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import foo.dao.UserDao;
+import foo.dao.UserDaoJdbc;
 import foo.dao.WeatherDao;
 import foo.dao.WeatherDaoJdbc;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,5 +42,10 @@ public class JdbcConfig {
     @Bean(name = "jdbcDao")
     public WeatherDao weatherDao() {
         return new WeatherDaoJdbc(customHikariDatasource());
+    }
+
+    @Bean(name = "jdbcUserDao")
+    public UserDao userDao() {
+        return new UserDaoJdbc(customHikariDatasource());
     }
 }

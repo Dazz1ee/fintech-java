@@ -1,10 +1,10 @@
 package foo.configurations;
 
+import foo.dao.UserDao;
+import foo.dao.UserDaoJpa;
 import foo.dao.WeatherDao;
 import foo.dao.WeatherDaoJpa;
-import foo.repositories.CityRepository;
-import foo.repositories.WeatherRepository;
-import foo.repositories.WeatherTypeRepository;
+import foo.repositories.*;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,5 +18,10 @@ public class JpaConfig {
     @Bean(name = "jpaDao")
     public WeatherDao weatherDao(WeatherRepository weatherRepository, WeatherTypeRepository weatherTypeRepository, CityRepository cityRepository) {
         return new WeatherDaoJpa(weatherRepository, cityRepository, weatherTypeRepository);
+    }
+
+    @Bean(name = "jpaUserDao")
+    public UserDao userDao(UserRepository userRepository, RoleRepository roleRepository) {
+        return new UserDaoJpa(userRepository, roleRepository);
     }
 }

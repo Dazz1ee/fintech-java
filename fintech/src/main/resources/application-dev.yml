@@ -24,6 +24,7 @@ springdoc:
 logging:
   level:
     foo: DEBUG
+    org.springframework.security: trace
 
 resilience4j.ratelimiter:
   instances:

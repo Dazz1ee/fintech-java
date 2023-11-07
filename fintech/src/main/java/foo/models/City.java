@@ -10,6 +10,7 @@ import java.util.List;
 
 
 @Entity
+@Table(name = "cities")
 @AllArgsConstructor
 @Data
 public class City {
