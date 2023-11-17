@@ -3,6 +3,11 @@ server:
   host: localhost
   schema: http
 
+cache:
+  course:
+    size: 3
+    valid-time: 60
+
 spring:
   datasource:
     url: "jdbc:h2:mem:test"
