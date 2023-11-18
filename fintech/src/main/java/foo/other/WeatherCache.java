@@ -1,18 +1,18 @@
 package foo.other;
 
 import foo.models.Weather;
-import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-import org.testcontainers.shaded.com.google.common.base.Function;
 
+import java.lang.ref.SoftReference;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
 
 @Component
 @ConfigurationProperties(prefix = "cache.course")
@@ -23,9 +23,9 @@ public class WeatherCache {
     @Setter
     private Long validTime;
 
-    private final Map<Object, ValidPair> container;
+    private final Map<Object, HashMapValue> container;
 
-    private final ConcurrentDoublyLinkedList<Weather> order;
+    private final ConcurrentDoublyLinkedList<KeyAndWeather> order;
 
     private final ReentrantReadWriteLock reentrantReadWriteLock;
 
@@ -45,17 +45,17 @@ public class WeatherCache {
         readLock.lock();
 
         try {
-            ValidPair weatherNode = container.get(key);
-            if (weatherNode == null) {
+            HashMapValue weatherNode = container.get(key);
+            if (weatherNode == null || weatherNode.keyAndWeather.getElement().weather.get() == null) {
                 return Optional.empty();
-            } else if (Instant.now().isAfter(weatherNode.getTime().plusSeconds(validTime))) {
+            } else if (Instant.now().isAfter(weatherNode.time.plusSeconds(validTime))) {
                 removeFromCache(key);
                 return Optional.empty();
             }
 
-            order.removeInnerNode(weatherNode.weatherNode);
-            order.addFirst(weatherNode.weatherNode.getElement());
-            return Optional.of(weatherNode.getWeatherNode().getElement());
+            order.removeInnerNode(weatherNode.keyAndWeather);
+            order.addFirst(weatherNode.keyAndWeather.getElement());
+            return Optional.ofNullable(weatherNode.keyAndWeather.getElement().weather.get());
         } finally {
             readLock.unlock();
         }
@@ -65,15 +65,15 @@ public class WeatherCache {
         writeLock.lock();
         try {
             if (container.containsKey(keyExtractor.apply(weather))) {
-                order.removeInnerNode(container.get(keyExtractor.apply(weather)).weatherNode);
+                order.removeInnerNode(container.get(keyExtractor.apply(weather)).keyAndWeather);
             } else if (size == order.getSize().get()) {
-                Weather removed = order.removeLast();
-                container.remove(removed.getCity().getId());
-                container.remove(removed.getCity().getName());
+                KeyAndWeather removed = order.removeLast();
+                container.remove(removed.key);
             }
 
-            ConcurrentDoublyLinkedList.Node<Weather> weatherNode = order.addFirst(weather);
-            container.put(keyExtractor.apply(weather), new ValidPair(Instant.now(), weatherNode));
+            ConcurrentDoublyLinkedList.Node<KeyAndWeather> weatherNode = order.addFirst(new KeyAndWeather(weather, keyExtractor.apply(weather)));
+
+            container.put(keyExtractor.apply(weather), new HashMapValue(Instant.now(), weatherNode));
         } finally {
             writeLock.unlock();
         }
@@ -82,9 +82,9 @@ public class WeatherCache {
     public void removeFromCache(Object key) {
         writeLock.lock();
         try {
-            ValidPair weather = container.remove(key);
+            HashMapValue weather = container.remove(key);
             if (weather != null) {
-                order.removeInnerNode(weather.getWeatherNode());
+                order.removeInnerNode(weather.keyAndWeather);
             }
         } finally {
             writeLock.unlock();
@@ -94,14 +94,14 @@ public class WeatherCache {
     public void removeFromCache(Weather weather1) {
         writeLock.lock();
         try {
-            ValidPair weather = container.remove(weather1.getCity().getName());
+            HashMapValue weather = container.remove(weather1.getCity().getName());
             if (weather != null) {
-                order.removeInnerNode(weather.getWeatherNode());
+                order.removeInnerNode(weather.keyAndWeather);
             }
 
             weather = container.remove(weather1.getCity().getId());
             if (weather != null) {
-                order.removeInnerNode(weather.getWeatherNode());
+                order.removeInnerNode(weather.keyAndWeather);
             }
         } finally {
             writeLock.unlock();
@@ -127,15 +127,23 @@ public class WeatherCache {
         }
     }
 
-    @Getter
-    private static class ValidPair {
-        @Setter
-        private volatile Instant time;
-        private final ConcurrentDoublyLinkedList.Node<Weather> weatherNode;
+    private static class HashMapValue {
+        private final Instant time;
+        private final ConcurrentDoublyLinkedList.Node<KeyAndWeather> keyAndWeather;
 
-        private ValidPair(Instant time, ConcurrentDoublyLinkedList.Node<Weather> weatherNode) {
+        private HashMapValue(Instant time, ConcurrentDoublyLinkedList.Node<KeyAndWeather> keyAndWeather) {
             this.time = time;
-            this.weatherNode = weatherNode;
+            this.keyAndWeather = keyAndWeather;
+        }
+    }
+
+    private static class KeyAndWeather {
+        private final Object key;
+        private final SoftReference<Weather> weather;
+
+        private KeyAndWeather(Weather weather, Object key) {
+            this.weather = new SoftReference<>(weather);
+            this.key = key;
         }
     }
 
