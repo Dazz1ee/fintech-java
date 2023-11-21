@@ -6,6 +6,7 @@ import foo.models.Weather;
 import foo.models.WeatherRequest;
 import foo.models.WeatherType;
 import foo.other.CustomUriBuilder;
+import foo.other.BiLoadingLRUCache;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import java.net.URI;
@@ -19,18 +20,23 @@ public class WeatherService {
 
     private final CustomUriBuilder customUriBuilder;
 
-    public WeatherService(WeatherDao weatherDao, @Qualifier("uriBuilderForWeatherApi") CustomUriBuilder customUriBuilder) {
+    private final BiLoadingLRUCache<Weather> cache;
+
+    public WeatherService(WeatherDao weatherDao, @Qualifier("uriBuilderForWeatherApi") CustomUriBuilder customUriBuilder, BiLoadingLRUCache<Weather> cache) {
         this.weatherDao = weatherDao;
         this.customUriBuilder = customUriBuilder;
+        this.cache = cache;
     }
 
     public Optional<Double> findWeatherByRegion(Long regionId, LocalDateTime dateTime) {
-        return weatherDao.findByRegionId(regionId, dateTime).map(Weather::getTemperature);
+        return cache
+                .get(regionId, dateTime, (region, date) -> weatherDao.findByRegionId(regionId, dateTime))
+                .map(Weather::getTemperature);
 
     }
 
     public Optional<Double> findWeatherByRegion(String name, LocalDateTime dateTime) {
-        return weatherDao.findByRegionName(name, dateTime).map(Weather::getTemperature);
+        return cache.get(name, dateTime).map(Weather::getTemperature);
     }
 
     public URI addNewRegionWithWeather(String cityName, WeatherRequest weatherWithNewRegion) {
@@ -57,16 +63,20 @@ public class WeatherService {
         Long regionId = weatherDao.updateByRegionNameAndCreateIfNotExists(weather);
 
         if(regionId == -1) {
+            cache.removeFromCache(name);
             return Optional.empty();
         }
+
         return Optional.of(customUriBuilder.getUri(regionId, weather.getDate()));
     }
 
     public  void removeWeathersByRegionId(Long regionId) {
+        cache.removeFromCache(regionId);
         weatherDao.deleteByRegionId(regionId);
     }
 
     public void removeWeathersByRegionName(String name) {
+        cache.removeFromCache(name);
         weatherDao.deleteByRegionName(name);
     }
 

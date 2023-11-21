@@ -7,6 +7,7 @@ import foo.models.Weather;
 import foo.models.WeatherRequest;
 import foo.models.WeatherType;
 import foo.other.CustomUriBuilder;
+import foo.other.BiLoadingLRUCache;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.ArgumentCaptor;
@@ -38,6 +39,9 @@ class WeatherServiceTest {
 
     @MockBean
     WeatherDao weatherDao;
+
+    @MockBean
+    BiLoadingLRUCache<Weather> biLoadingLRUCache;
 
     @Autowired
     @Qualifier("uriBuilderForWeatherApi")
@@ -77,8 +81,7 @@ class WeatherServiceTest {
         LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         String regionName = "Foo";
         Weather weather = new Weather(1L, new City("Test"), new WeatherType("sunshine"), 20.1, dateTime);
-        when(weatherDao.findByRegionName(regionName, dateTime)).thenReturn(Optional.of(weather));
-
+        when(biLoadingLRUCache.get(regionName, dateTime)).thenReturn(Optional.of(weather));
         Optional<Double> actual = weatherService.findWeatherByRegion(regionName, dateTime);
 
         assertThat(actual).contains(weather.getTemperature());

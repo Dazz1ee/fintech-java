@@ -1,91 +1,101 @@
 package foo.other;
 
+import foo.dao.WeatherDaoJpa;
 import foo.models.City;
 import foo.models.Weather;
 import foo.models.WeatherType;
 import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ActiveProfiles("test")
-@SpringBootTest
-class WeatherCacheTest {
-    @Value("${cache.course.size}")
+@ExtendWith(MockitoExtension.class)
+class BiLoadingLRUCacheTest {
     private Integer cacheSize;
+    private BiLoadingLRUCache<Weather> biLoadingLRUCache;
 
-    @Autowired
-    private WeatherCache weatherCache;
+    @Mock
+    WeatherDaoJpa weatherDao;
+
+
+    @BeforeAll
+    void inin() {
+        cacheSize = 3;
+        biLoadingLRUCache = new BiLoadingLRUCache(3, 600L,
+                (Object id, Object dateTime) -> weatherDao.findByRegionName((String) id, (LocalDateTime) dateTime));
+    }
 
     @BeforeEach
     void clear() {
-        weatherCache.removeAll();
+        biLoadingLRUCache.removeAll();
     }
 
 
     @Test
-    void getWeatherFromCacheWhenNotExists() {
-        assertThat(weatherCache.getWeatherFromCache(0L)).isEmpty();
+    void getWhenNotExists() {
+        assertThat(biLoadingLRUCache.get("test")).isEmpty();
     }
 
     @Test
-    void getWeatherFromCache() {
+    void get() {
         Weather weather = Weather.builder()
                                 .weatherType(new WeatherType(1L, "test"))
-                                .city(new City(1L, "test1"))
+                                .city(new City(1L, "test"))
                                 .temperature(10.2)
                                 .build();
 
-        weatherCache.addWeatherToCache(weather, w -> w.getCity().getId());
+        biLoadingLRUCache.put(weather.getCity().getName(), weather);
 
-        assertThat(weatherCache.getWeatherFromCache(1L).get()).isEqualTo(weather);
+        assertThat(biLoadingLRUCache.get("test").get()).isEqualTo(weather);
     }
 
     @Test
-    void getWeatherFromCacheWithName() {
+    void getAutoInsert() {
         Weather weather = Weather.builder()
                 .weatherType(new WeatherType(1L, "test"))
-                .city(new City(2L, "test2"))
+                .city(new City(1L, "test"))
                 .temperature(10.2)
+                .date(LocalDateTime.now())
                 .build();
 
-        weatherCache.addWeatherToCache(weather, w -> w.getCity().getName());
+        when(weatherDao.findByRegionName(weather.getCity().getName(), weather.getDate())).thenReturn(Optional.of(weather));
+        biLoadingLRUCache.get(weather.getCity().getName(), weather.getDate());
 
-        assertThat(weatherCache.getWeatherFromCache("test2").get()).isEqualTo(weather);
+        assertThat(biLoadingLRUCache.get("test").get()).isEqualTo(weather);
     }
 
-
-
-
     @Test
-    void addWeatherToCache() {
+    void put() {
         Weather weather = null;
         for (long i = 0; i <= cacheSize; i++) {
             weather = Weather.builder()
                     .weatherType(new WeatherType(1L, "test"))
-                    .city(new City(0L, "test0"))
+                    .city(new City(0L, "test"))
                     .temperature(10.2)
                     .build();
             weather.getCity().setId(i);
             weather.getCity().setName("test" + i);
-            weatherCache.addWeatherToCache(weather, w -> w.getCity().getName());
+            biLoadingLRUCache.put(weather.getCity().getName(), weather);
         }
 
 
-        assertThat(weatherCache.getWeatherFromCache(weather.getCity().getName()).get()).isEqualTo(weather);
-        assertThat(weatherCache.getWeatherFromCache("test0")).isEmpty();
+        assertThat(biLoadingLRUCache.get(weather.getCity().getName()).get()).isEqualTo(weather);
+        assertThat(biLoadingLRUCache.get("test")).isEmpty();
     }
 
     @Test
     void addWeatherMultipleThread() throws InterruptedException {
-        assertThat(weatherCache.getSize()).isZero();
+        assertThat(biLoadingLRUCache.getSize()).isZero();
 
         List<Thread> threadList = new ArrayList<>();
         for (long i = 1; i  < 4 + cacheSize; i++) {
@@ -103,7 +113,7 @@ class WeatherCacheTest {
                             .temperature(10.2)
                             .build();
 
-                    weatherCache.addWeatherToCache(weather, w -> w.getCity().getId());
+                    biLoadingLRUCache.put(weather.getCity().getName(), weather);
                 }
             }).init(i)));
 
@@ -114,22 +124,22 @@ class WeatherCacheTest {
             thread.join();
         }
 
-        assertThat(weatherCache.getSize()).isEqualTo(cacheSize);
+        assertThat(biLoadingLRUCache.getSize()).isEqualTo(cacheSize);
     }
 
     @Test
     void removeFromCache() {
         Weather weather = Weather.builder()
                 .weatherType(new WeatherType(1L, "test"))
-                .city(new City(1L, "test5"))
+                .city(new City(1L, "test"))
                 .temperature(10.2)
                 .build();
 
-        weatherCache.addWeatherToCache(weather, w -> w.getCity().getId());
-        assertThat(weatherCache.getWeatherFromCache(1L)).isPresent();
+        biLoadingLRUCache.put(weather.getCity().getName(), weather);
+        assertThat(biLoadingLRUCache.get("test")).isPresent();
 
-        weatherCache.removeFromCache(1L);
-        assertThat(weatherCache.getWeatherFromCache(1L)).isEmpty();
+        biLoadingLRUCache.removeFromCache("test");
+        assertThat(biLoadingLRUCache.get("test")).isEmpty();
     }
 
 }
