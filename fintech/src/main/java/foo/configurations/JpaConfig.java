@@ -16,7 +16,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 public class JpaConfig {
 
     @Bean(name = "jpaDao")
-    public WeatherDao weatherDao(WeatherRepository weatherRepository, WeatherTypeRepository weatherTypeRepository, CityRepository cityRepository) {
+    public WeatherDao weatherDao(WeatherRepository weatherRepository, WeatherTypeRepository
+            weatherTypeRepository, CityRepository cityRepository) {
         return new WeatherDaoJpa(weatherRepository, cityRepository, weatherTypeRepository);
     }
 

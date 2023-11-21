@@ -19,9 +19,13 @@ import java.util.Optional;
 @Transactional(isolation = Isolation.READ_COMMITTED)
 public class WeatherDaoJpa implements WeatherDao{
     private final WeatherRepository weatherRepository;
+
     private final CityRepository cityRepository;
+
     private final WeatherTypeRepository typeRepository;
+
     public Optional<Weather> findByRegionId(Long id, LocalDateTime dateTime) {
+
         return weatherRepository.findByCityIdAndDate(id, dateTime);
     }
 
@@ -77,6 +81,7 @@ public class WeatherDaoJpa implements WeatherDao{
         Optional<Long> id = weatherRepository.getIdByDateAndCityName(weather.getCity().getName(), weather.getDate());
         id.ifPresent(weather::setId);
         Long cityId = saveWeatherWithNewRegion(weather);
+
         return id.isPresent() ? -1L : cityId;
     }
 
