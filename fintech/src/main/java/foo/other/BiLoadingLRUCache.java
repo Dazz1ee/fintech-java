@@ -90,8 +90,6 @@ public class BiLoadingLRUCache<T> implements BiLoadingCache<T> {
 
             replaceAndRise(valueMap.linkedListElement(), valueMap.linkedListElement().getElement().getValue().get());
             return Optional.ofNullable(valueMap.linkedListElement().getElement().getValue().get());
-        } catch (ClassCastException ex) {
-              throw new CacheClassCastException(ex);
         } finally {
             readLock.unlock();
         }
@@ -120,8 +118,6 @@ public class BiLoadingLRUCache<T> implements BiLoadingCache<T> {
 
             replaceAndRise(valueMap.linkedListElement(), valueMap.linkedListElement().getElement().getValue().get());
             return Optional.ofNullable(valueMap.linkedListElement().getElement().getValue().get());
-        } catch (ClassCastException ex) {
-            throw new CacheClassCastException(ex);
         } finally {
             writeLock.unlock();
         }
@@ -131,7 +127,11 @@ public class BiLoadingLRUCache<T> implements BiLoadingCache<T> {
     public Optional<T> load(Object firstParam,
                             Object secondParam,
                             BiFunction<Object, Object, Optional<T>> loader) {
-        return loader.apply(firstParam, secondParam);
+        try {
+            return loader.apply(firstParam, secondParam);
+        } catch (ClassCastException ex) {
+            throw new CacheClassCastException(ex);
+        }
     }
 
     @Override
