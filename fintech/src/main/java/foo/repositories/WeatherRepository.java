@@ -23,4 +23,9 @@ public interface WeatherRepository extends JpaRepository<Weather, Long>{
 
     Long deleteByCityId(Long id);
 
+    @Query(value = "SELECT AVG(result.temperature) FROM (SELECT weathers.temperature from weathers " +
+            "JOIN cities ON weathers.city_id = cities.id " +
+            "WHERE cities.name = ? ORDER BY weathers.id DESC LIMIT 30) as result", nativeQuery = true)
+    Double getAverage(@Param("city") String city);
+
 }

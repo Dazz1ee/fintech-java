@@ -33,4 +33,14 @@ public class WeatherMapper {
         resultSet.close();
         return cityId;
     }
+
+    public static Optional<Double> getAverage(ResultSet resultSet) throws SQLException {
+        Optional<Double> average = Optional.empty();
+        if (resultSet.next()) {
+           average = Optional.of(resultSet.getDouble(1));
+        }
+
+        resultSet.close();
+        return average;
+    }
 }

@@ -17,5 +17,5 @@ public interface WeatherDao {
     Boolean deleteByRegionName(String regionName);
     Boolean deleteByRegionId(Long regionId);
 
-
+    Double getAverageByCity(String city);
 }
