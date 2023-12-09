@@ -373,6 +373,44 @@ public class WeatherDaoJdbc implements WeatherDao {
     }
 
     @Override
+    public Double getAverageByCity(String city) {
+        Connection connection = getConnection();
+
+        try (connection) {
+            connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            connection.setAutoCommit(false);
+            String sql = "SELECT AVG(result.temperature) FROM (SELECT weathers.temperature from weathers " +
+                    "JOIN cities ON weathers.city_id = cities.id " +
+                    "WHERE cities.name = ? ORDER BY weathers.id DESC LIMIT 30) as result";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(
+                    sql)) {
+                preparedStatement.setString(1, city);
+
+                ResultSet resultSet = preparedStatement.executeQuery();
+
+                return WeatherMapper.getAverage(resultSet).orElseThrow(() -> {
+                    try {
+                        connection.rollback();
+                    } catch (SQLException e) {
+                        throw new RollbackException(e);
+                    }
+
+                    return new WeatherNotFoundException();
+                });
+            }
+
+        } catch (SQLException exception) {
+            try {
+                connection.rollback();
+            } catch (SQLException e) {
+                throw new RollbackException(e.initCause(exception));
+            }
+
+            throw new GetConnectionException(exception);
+        }
+    }
+
+    @Override
     public Boolean deleteByRegionName(String regionName) {
         Connection connection = getConnection();
 

@@ -386,4 +386,50 @@ class WeatherDaoImpTest {
         }
     }
 
+    @Test
+    void averageWhenMoreThen30() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+
+            Weather weather = Weather.builder()
+                    .city(new City("test"))
+                    .weatherType(new WeatherType("sunshine"))
+                    .date(dateTime)
+                    .temperature(1000000.0)
+                    .build();
+            weatherDao.saveWeatherWithNewRegion(weather);
+
+            weather.setTemperature(1.0);
+            for (int i = 0; i < 30; i++) {
+                weatherDao.saveWeatherWithNewRegion(weather);
+            }
+
+            Double average = weatherDao.getAverageByCity("test");
+
+            assertThat(average).isEqualTo(1.0);
+        }
+    }
+
+    @Test
+    void averageWhenLessThen30() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            LocalDateTime dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+
+            Weather weather = Weather.builder()
+                    .city(new City("test"))
+                    .weatherType(new WeatherType("sunshine"))
+                    .date(dateTime)
+                    .temperature(10.0)
+                    .build();
+
+            for (int i = 0; i < 5; i++) {
+                weatherDao.saveWeatherWithNewRegion(weather);
+            }
+
+            Double average = weatherDao.getAverageByCity("test");
+
+            assertThat(average).isEqualTo(10.0);
+        }
+    }
+
 }

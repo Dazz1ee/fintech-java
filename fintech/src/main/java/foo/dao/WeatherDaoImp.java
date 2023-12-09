@@ -95,6 +95,20 @@ public class WeatherDaoImp implements WeatherDao{
         return weathers.removeIf(element -> element.getCity().getId().equals(regionId));
     }
 
+    @Override
+    public Double getAverageByCity(String city) {
+        int count = 0;
+        double temperature = 0;
+        for (int i = weathers.size() - 1; i > 0 ; i--) {
+            if (weathers.get(i).getCity().getName().equals(city)) {
+                count++;
+                temperature += weathers.get(i).getTemperature();
+            }
+        }
+
+        return temperature / count;
+    }
+
     public WeatherDaoImp() {
         nextWeatherId = new AtomicLong(0L);
         nextCityId = new AtomicLong(0L);

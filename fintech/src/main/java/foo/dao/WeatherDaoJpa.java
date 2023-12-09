@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @Transactional(isolation = Isolation.READ_COMMITTED)
-public class WeatherDaoJpa implements WeatherDao{
+public class WeatherDaoJpa implements WeatherDao {
     private final WeatherRepository weatherRepository;
 
     private final CityRepository cityRepository;
@@ -93,5 +93,10 @@ public class WeatherDaoJpa implements WeatherDao{
     @Override
     public Boolean deleteByRegionId(Long regionId) {
         return weatherRepository.deleteByCityId(regionId) > 0;
+    }
+
+    @Override
+    public Double getAverageByCity(String city) {
+        return weatherRepository.getAverage(city);
     }
 }
